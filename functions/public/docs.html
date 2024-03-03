@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NeptuneChainAPI Documentation</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        line-height: 1.6;
+        background: #f4f4f4;
+        color: #333;
+      }
+      .container {
+        max-width: 960px;
+        margin: 20px auto;
+        padding: 20px;
+        background: #fff;
+      }
+      .action-container {
+        position: fixed;
+        top: 1rem;
+        left: 1rem;
+        text-align: center;
+        margin-top: 20px;
+      }
+      /* Button Styling */
+      button {
+        background-color: #007bb5; /* Accent color for the button background */
+        color: #ffffff; /* White color for the text */
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 16px;
+        transition: background-color 0.3s ease;
+      }
+
+      button:hover {
+        background-color: #005a87; /* A slightly darker primary color on hover for effect */
+      }
+
+      h1,
+      h2,
+      h3 {
+        color: #333;
+      }
+      pre {
+        background-color: #f4f4f4;
+        border-left: 3px solid #007bff;
+        padding: 10px;
+        width: fit-content;
+      }
+      code {
+        background: #eee;
+        display: block;
+        padding: 10px;
+        margin: 10px 0;
+        overflow-x: auto;
+      }
+      table {
+        width: 100%;
+        margin-top: 20px;
+        border-collapse: collapse;
+        table-layout: auto;
+      }
+      table,
+      th,
+      td {
+        border: 1px solid #ccc;
+      }
+      th,
+      td {
+        padding: 10px;
+        text-align: left;
+      }
+      th {
+        background-color: #f4f4f4;
+      }
+      .api-section {
+        margin-bottom: 40px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>NeptuneChainAPI Documentation</h1>
+      <p>
+        Welcome to the NeptuneChainAPI documentation. This page provides
+        information on server routes and functionalities.
+      </p>
+      <div class="action-container">
+        <a href="/app/" target="_blank"><button>Home Page</button></a>
+      </div>
+
+      <h2>Server Modules</h2>
+      <p>
+        NeptuneChainAPI utilizes various server modules including Express,
+        dotenv for environment configuration, and additional API integrations
+        such as database, Blockchain, Moralis, Livepeer, maps, and Stripe.
+      </p>
+
+      <h2>Status Codes</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Status Code</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>200</td>
+            <td>Response was successful</td>
+          </tr>
+          <tr>
+            <td>400</td>
+            <td>Client Error: Bad Request</td>
+          </tr>
+          <tr>
+            <td>401</td>
+            <td>Client Error: Unauthorized</td>
+          </tr>
+          <tr>
+            <td>404</td>
+            <td>Client Error: Request Not Found</td>
+          </tr>
+          <tr>
+            <td>500</td>
+            <td>
+              Server Error: Indicating that the request was accepted, but that
+              an error on the server prevented the fulfillment of the request.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>API Routes</h2>
+
+      <div class="api-section">
+        <h2>Database Routes</h2>
+
+        <h3>Get User</h3>
+        <h4><code>POST /db/user/get/user</code></h4>
+        <p>Purpose: Retrieves user information by user ID.</p>
+        <p>Parameters:</p>
+        <pre>{ "uid": "string" }</pre>
+        <p>Returns:</p>
+        <pre>{ "user": "UserObject" }</pre>
+
+        <h3>Get Username</h3>
+        <h4><code>POST /db/user/get/username</code></h4>
+        <p>Purpose: Retrieves a user's username.</p>
+        <p>Parameters:</p>
+        <pre>{ "username": "string" }</pre>
+        <p>Returns:</p>
+        <pre>{ "username": "string" }</pre>
+
+        <h3>Get User Dashboard</h3>
+        <h4><code>POST /db/user/get/dashboard</code></h4>
+        <p>Purpose: Retrieves dashboard data for a user.</p>
+        <p>Parameters:</p>
+        <pre>{ "uid": "string" }</pre>
+        <p>Returns:</p>
+        <pre>{ "dashboard": "DashboardObject" }</pre>
+
+        <h3>Get User Videos</h3>
+        <h4><code>POST /db/user/get/media/videos</code></h4>
+        <p>Purpose: Retrieves videos associated with a user.</p>
+        <p>Parameters:</p>
+        <pre>{ "uid": "string" }</pre>
+        <p>Returns:</p>
+        <pre>{ "videos": "VideoObject[]" }</pre>
+
+        <h3>Get User Streams</h3>
+        <h4><code>POST /db/user/get/media/streams</code></h4>
+        <p>Purpose: Retrieves live streams associated with a user.</p>
+        <p>Parameters:</p>
+        <pre>{ "uid": "string" }</pre>
+        <p>Returns:</p>
+        <pre>{ "streams": "StreamObject[]" }</pre>
+
+        <h3>Set User</h3>
+        <h4><code>POST /db/user/set/user</code></h4>
+        <p>Purpose: Create or update user data.</p>
+        <p>Parameters:</p>
+        <pre>{ "userdata": "UserObject" }</pre>
+        <p>Returns:</p>
+        <pre>{ "result": "ConfirmationObject" }</pre>
+      </div>
+
+      <h3>Get Video</h3>
+      <h4><code>POST /db/media/get/video</code></h4>
+      <p>Purpose: Retrieves video information by playback ID.</p>
+      <p>Parameters:</p>
+      <pre>{ "playbackId": "string" }</pre>
+      <p>Returns:</p>
+      <pre>{ "video": "VideoObject" }</pre>
+
+      <h3>Get Stream</h3>
+      <h4><code>POST /db/media/get/stream</code></h4>
+      <p>Purpose: Retrieves stream information by playback ID.</p>
+      <p>Parameters:</p>
+      <pre>{ "playbackId": "string" }</pre>
+      <p>Returns:</p>
+      <pre>{ "stream": "StreamObject" }</pre>
+
+      <h3>Set Video</h3>
+      <h4><code>POST /db/media/set/video</code></h4>
+      <p>Purpose: Stores video information.</p>
+      <p>Parameters:</p>
+      <pre>{ "videoAsset": "VideoAssetObject", "creatorUID": "string" }</pre>
+      <p>Returns:</p>
+      <pre>{ "result": "ActionResult" }</pre>
+
+      <h3>Set Stream</h3>
+      <h4><code>POST /db/media/set/stream</code></h4>
+      <p>Purpose: Stores stream information.</p>
+      <p>Parameters:</p>
+      <pre>{ "streamData": "StreamDataObject", "creatorUID": "string" }</pre>
+      <p>Returns:</p>
+      <pre>{ "result": "ActionResult" }</pre>
+
+      <div class="api-section">
+        <h2>Ethereum Routes</h2>
+        <h3>Get Signer</h3>
+        <h4><code>POST /ethereum/get/signer</code></h4>
+        <p>Purpose: Retrieves the current Ethereum signer object.</p>
+        <p>No parameters required.</p>
+        <p>Returns:</p>
+        <pre>{ "signer": "SignerObject" }</pre>
+      </div>
+
+      <div class="api-section">
+        <h2>Livepeer Routes</h2>
+        <h3>Get Client</h3>
+        <h4><code>POST /livepeer/get/client</code></h4>
+        <p>Purpose: Fetches Livepeer client configuration.</p>
+        <p>No parameters required.</p>
+        <p>Returns:</p>
+        <pre>{ "livepeerClient": "ClientObject" }</pre>
+      </div>
+
+      <h3>Get Viewership</h3>
+      <h4><code>POST /livepeer/get/viewership</code></h4>
+      <p>Purpose: Retrieves viewership statistics for a given playback ID.</p>
+      <p>Parameters:</p>
+      <pre>{ "playbackId": "string" }</pre>
+      <p>Returns:</p>
+      <pre>{ "viewership": "ViewershipObject" }</pre>
+
+      <h3>Get Asset Metrics</h3>
+      <h4><code>POST /livepeer/get/asset_metrics</code></h4>
+      <p>Purpose: Retrieves metrics for a given asset ID.</p>
+      <p>Parameters:</p>
+      <pre>{ "assetId": "string" }</pre>
+      <p>Returns:</p>
+      <pre>{ "asset_metrics": "MetricsObject" }</pre>
+
+      <div class="api-section">
+        <h2>Maps Routes</h2>
+        <h4><code>POST /maps/get/api</code></h4>
+        <p>Purpose: Retrieves Maps API configuration.</p>
+        <p>No parameters required.</p>
+        <p>Returns:</p>
+        <pre>{ "api": "APIObject" }</pre>
+      </div>
+
+      <div class="api-section">
+        <h2>Moralis Routes</h2>
+
+        <h3>Get Wallet NFTs</h3>
+        <h4><code>POST /moralis/get/wallet_nfts</code></h4>
+        <p>Purpose: Fetches NFTs from a specified wallet address.</p>
+        <p>Parameters:</p>
+        <pre>{ "address": "string" }</pre>
+        <p>Returns:</p>
+        <pre>{ "wallet_nfts": "NFTObject[]" }</pre>
+      </div>
+
+      <h3>Get NFT Metadata</h3>
+      <h4><code>POST /moralis/get/nft_metadata</code></h4>
+      <p>Purpose: Retrieves metadata for an NFT by address and token ID.</p>
+      <p>Parameters:</p>
+      <pre>{ "address": "string", "tokenId": "string" }</pre>
+      <p>Returns:</p>
+      <pre>{ "nft_metadata": "NFTMetadataObject" }</pre>
+
+      <div class="api-section">
+        <h2>Stripe Routes</h2>
+
+        <h3>Create Payment Intent</h3>
+        <h4><code>POST /stripe/create/payment_intent</code></h4>
+        <p>Purpose: Creates a Stripe payment intent for handling payments.</p>
+        <p>Parameters:</p>
+        <pre>{ "amount": "number", "currency": "string" }</pre>
+        <p>Returns:</p>
+        <pre>{ "payment_intent": "PaymentIntentObject" }</pre>
+      </div>
+
+      <h3>Stripe Config</h3>
+      <h4><code>POST /stripe/config</code></h4>
+      <p>Purpose: Provides the Stripe publishable key for front-end use.</p>
+      <p>Parameters: None</p>
+      <p>Returns:</p>
+      <pre>{ "publishableKey": "string" }</pre>
+
+      <h3>Get Price</h3>
+      <h4><code>POST /stripe/get/price</code></h4>
+      <p>Purpose: Retrieves pricing information.</p>
+      <p>Parameters:</p>
+      <pre>{ "priceID": "string" }</pre>
+      <p>Returns:</p>
+      <pre>{ "price": "PriceObject" }</pre>
+    </div>
+  </body>
+</html>
