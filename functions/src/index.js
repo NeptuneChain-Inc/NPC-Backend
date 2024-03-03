@@ -30,12 +30,14 @@ app.use(function (req, res, next) {
 });
 
 /** API IMPORTS */
+const authentication = require("./apis/authentication");
 const database = require("./apis/database");
 const ethereum = require("./apis/ethereum");
 const moralis = require("./apis/moralis");
 const livepeer = require("./apis/livepeer");
 const maps = require("./apis/maps");
 const stripe = require("./apis/stripe");
+const { firebaseConfig } = require("./apis/firebase");
 
 /***********************************#WEB*ROUTES*********************************************** */
 app.get("/", (req, res) => {
@@ -46,6 +48,35 @@ app.get("/", (req, res) => {
 app.get("/docs", (req, res) => {
   const path = resolve("/docs.html");
   res.sendFile(path);
+});
+
+/***********************************#FIREBASE*ROUTES******************************************* */
+app.post("/firebase/config", (req, res) => {
+  return res.send({
+    firebaseConfig
+  });
+});
+
+/***********************************#AUTHENTICATION*ROUTES******************************************* */
+// #EmailUser routes
+//Required Body params: email, username, type, password
+app.post("/auth/email/create", async (req, res) => {
+  try {
+    const user = await authentication.EmailUser.create(req.body)
+    return res.send({ user });
+  } catch (error) {
+    return res.status(500).send({ error });
+  }
+});
+
+//Required Body params: email
+app.post("/auth/email/password_reset", async (req, res) => {
+  try {
+    const requested = await authentication.EmailUser.reset_password(req.body)
+    return res.send({ requested });
+  } catch (error) {
+    return res.status(500).send({ error });
+  }
 });
 
 /***********************************#DATABASE*ROUTES******************************************* */
@@ -243,19 +274,14 @@ app.post("/stripe/get/price", async (req, res) => {
 });
 /****************************************************************************************** */
 
-// const isFirebaseEnv =
-//   process.env.FUNCTIONS_EMULATOR === "true" ||
-//   process.env.NODE_ENV === "production";
+const isFirebaseEnv = false;
 
-// if (isFirebaseEnv) {
-//   exports.app = require("firebase-functions").https.onRequest(app);
-//   console.log(`SERVER IS LIVE!!`);
-// } else {
-//   const PORT = process.env.TEST_PORT;
-//   app.listen(PORT || 3000, () =>
-//     console.log(`Node server listening at http://localhost:${PORT}`)
-//   );
-// }
-
-exports.app = require("firebase-functions").https.onRequest(app);
+if (isFirebaseEnv) {
+  exports.app = require("firebase-functions").https.onRequest(app);
   console.log(`SERVER IS LIVE!!`);
+} else {
+  const PORT = process.env.TEST_PORT;
+  app.listen(PORT || 3000, () =>
+    console.log(`Node server listening at http://localhost:${PORT}`)
+  );
+}

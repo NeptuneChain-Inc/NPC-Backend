@@ -2,6 +2,8 @@
  * NOTES:
  * #TODO: Create getVideos && getStreams query functions
  */
+
+const { ref, get, set, push } = require("firebase/database");
 const { db } = require("../apis/firebase");
 
 /*************************************************************************************** */
@@ -13,35 +15,27 @@ const { db } = require("../apis/firebase");
 const sanitizeUserInput = (input) => String(input).replace(/[^a-z0-9]/gi, "");
 
 /*************************************************************************************** */
+/**
+ *
+ * @param {database path to retrieve data} path
+ * @returns value at path or null if failed
+ */
+const _getData = async (path) => (await get(ref(db, path)))?.val();
 
-const _getData = async (path) => {
-  const snapshot = await db.doc(path).get();
-  if (snapshot.exists()) {
-    const documents = [];
-    snapshot.forEach((doc) => {
-      documents.push({ id: doc.id, data: doc.data() });
-    });
-    return documents;
-  }
-  return null;
-};
-
+/**
+ *
+ * @param {* database path to manupilate data} path
+ * @param {* data to write in database} data
+ * @returns true if successful or null if failed
+ */
 const _saveData = async (path, data) => {
-  try {
-    await db.doc(path).set(data);
-    return true;
-  } catch (e) {
-    throw e;
-  }
+  await set(ref(db, path), data);
+  return Promise.resolve(true);
 };
 
 const _pushData = async (path, data) => {
-  try {
-    const res = await db.doc(path).add(data);
-    return res.id;
-  } catch (e) {
-    throw e;
-  }
+  await push(ref(db, path), data);
+  return Promise.resolve(true);
 };
 /**
  * Loads the default template for a user's dashboard data.
