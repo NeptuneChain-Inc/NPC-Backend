@@ -11,13 +11,13 @@ const { resolve } = require("path");
 const dotenv = require("dotenv");
 
 /** SERVER CONFIGS */
-dotenv.config({ path: ".env" });
+dotenv.config({ path: "./src/.env" });
 
 const app = express();
 
 app.use(express.json());
 
-app.use(express.static("../public"));
+app.use(express.static("./public"));
 
 // ##NB Set which addresses have access to server.
 app.use(function (req, res, next) {
@@ -38,6 +38,8 @@ const livepeer = require("./apis/livepeer");
 const maps = require("./apis/maps");
 const stripe = require("./apis/stripe");
 const { firebaseConfig } = require("./apis/firebase");
+
+const isDevMode = Boolean(process.env.DEV_MODE === "true");
 
 /***********************************#WEB*ROUTES*********************************************** */
 app.get("/", (req, res) => {
@@ -121,16 +123,6 @@ app.post("/db/user/get/media/streams", async (req, res) => {
   try {
     const streams = await database.UserDB.get.media.streams(req.body.uid);
     return res.send({ streams });
-  } catch (error) {
-    return res.status(500).send({ error });
-  }
-});
-
-// #UserDB set routes
-app.post("/db/user/set/user", async (req, res) => {
-  try {
-    const result = await database.UserDB.set.create(req.body.userdata);
-    return res.send({ result });
   } catch (error) {
     return res.status(500).send({ error });
   }
@@ -274,14 +266,13 @@ app.post("/stripe/get/price", async (req, res) => {
 });
 /****************************************************************************************** */
 
-const isFirebaseEnv = false;
-
-if (isFirebaseEnv) {
-  exports.app = require("firebase-functions").https.onRequest(app);
-  console.log(`SERVER IS LIVE!!`);
-} else {
-  const PORT = process.env.TEST_PORT;
-  app.listen(PORT || 3000, () =>
+if (isDevMode) {
+  const PORT = process.env.TEST_PORT || 3000;
+  app.listen(PORT, () =>
     console.log(`Node server listening at http://localhost:${PORT}`)
   );
+} else {
+  exports.app = require("firebase-functions").https.onRequest(app);
+  console.log(`SERVER IS LIVE!!`);
 }
+
