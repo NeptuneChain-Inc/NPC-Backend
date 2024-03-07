@@ -227,8 +227,8 @@ const UserDB = {
       streams: getUserStreams,
     },
   },
-  set: {
-    create: createUser,
+  create: {
+    user: createUser,
   },
 };
 

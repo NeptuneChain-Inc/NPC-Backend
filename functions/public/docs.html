@@ -184,11 +184,11 @@
         <p>Returns:</p>
         <pre>{ "streams": "StreamObject[]" }</pre>
 
-        <h3>Set User</h3>
-        <h4><code>POST /db/user/set/user</code></h4>
+        <h3>Create User</h3>
+        <h4><code>POST /db/user/create/user</code></h4>
         <p>Purpose: Create or update user data.</p>
         <p>Parameters:</p>
-        <pre>{ "userdata": "UserObject" }</pre>
+        <pre>{ "userdata": {uid, email, username, type,...} }</pre>
         <p>Returns:</p>
         <pre>{ "result": "ConfirmationObject" }</pre>
       </div>
@@ -209,16 +209,16 @@
       <p>Returns:</p>
       <pre>{ "stream": "StreamObject" }</pre>
 
-      <h3>Set Video</h3>
-      <h4><code>POST /db/media/set/video</code></h4>
+      <h3>Create Video</h3>
+      <h4><code>POST /db/media/creat/video</code></h4>
       <p>Purpose: Stores video information.</p>
       <p>Parameters:</p>
       <pre>{ "videoAsset": "VideoAssetObject", "creatorUID": "string" }</pre>
       <p>Returns:</p>
       <pre>{ "result": "ActionResult" }</pre>
 
-      <h3>Set Stream</h3>
-      <h4><code>POST /db/media/set/stream</code></h4>
+      <h3>Create Stream</h3>
+      <h4><code>POST /db/media/create/stream</code></h4>
       <p>Purpose: Stores stream information.</p>
       <p>Parameters:</p>
       <pre>{ "streamData": "StreamDataObject", "creatorUID": "string" }</pre>

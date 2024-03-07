@@ -19,7 +19,7 @@ const createEmailUser = async ({ email, username, type, password }) => {
   
       if (user) {
         const { uid } = user;
-        return await UserDB.set.create({
+        return await UserDB.create.user({
           uid,
           username: username.toLowerCase(),
           email: email.toLowerCase(),

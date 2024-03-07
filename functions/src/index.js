@@ -83,6 +83,16 @@ app.post("/auth/email/password_reset", async (req, res) => {
 
 /***********************************#DATABASE*ROUTES******************************************* */
 // #UserDB get routes
+app.post("/db/user/create/user", async (req, res) => {
+  const {uid, email, username, type} = req.body || {};
+  try {
+    const result = await database.UserDB.create.user({uid, email, username, type});
+    return res.send({ result });
+  } catch (error) {
+    return res.status(500).send({ error });
+  }
+});
+
 app.post("/db/user/get/user", async (req, res) => {
   try {
     const user = await database.UserDB.get.user(req.body.uid);
@@ -148,7 +158,7 @@ app.post("/db/media/get/stream", async (req, res) => {
 });
 
 // #MediaDB set routes
-app.post("/db/media/set/video", async (req, res) => {
+app.post("/db/media/create/video", async (req, res) => {
   try {
     const result = await database.MediaDB.set.video(
       req.body.videoAsset,
@@ -160,7 +170,7 @@ app.post("/db/media/set/video", async (req, res) => {
   }
 });
 
-app.post("/db/media/set/stream", async (req, res) => {
+app.post("/db/media/create/stream", async (req, res) => {
   try {
     const result = await database.MediaDB.set.stream(
       req.body.streamData,

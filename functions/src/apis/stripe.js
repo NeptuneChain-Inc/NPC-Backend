@@ -18,6 +18,7 @@ const createPaymentIntent = async (request_body) => {
       currency,
       amount,
       automatic_payment_methods: { enabled: true },
+      ...request_body
     });
 
     return {
