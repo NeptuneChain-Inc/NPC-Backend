@@ -5,10 +5,17 @@
  * }
  */
 
+/***
+ * TO-DO
+ * 
+ * CONVERT TO TYPESCRIPT
+ */
+
 /** SERVER MODULES */
 const express = require("express");
 const { resolve } = require("path");
 const dotenv = require("dotenv");
+const bodyParser = require('body-parser');
 
 /** SERVER CONFIGS */
 dotenv.config({ path: "./src/.env" });
@@ -29,6 +36,8 @@ app.use(function (req, res, next) {
   next();
 });
 
+app.use(bodyParser.json());
+
 /** API IMPORTS */
 const authentication = require("./apis/authentication");
 const database = require("./apis/database");
@@ -38,8 +47,14 @@ const livepeer = require("./apis/livepeer");
 const maps = require("./apis/maps");
 const stripe = require("./apis/stripe");
 const { firebaseConfig } = require("./apis/firebase");
-
-const isDevMode = Boolean(process.env.DEV_MODE === "true");
+const {
+  addDevice,
+  editDevice,
+  removeDevice,
+  getDeviceDetails,
+  emulateDeviceFunction,
+  getRecordedData
+} = require('./apis/deviceManager');
 
 /***********************************#WEB*ROUTES*********************************************** */
 app.get("/", (req, res) => {
@@ -274,15 +289,92 @@ app.post("/stripe/get/price", async (req, res) => {
     return res.status(500).send({ error });
   }
 });
-/****************************************************************************************** */
+/*****************************************DEVICE*MANAGEMENT********************************** */
+// Add Device
+app.post('/device', async (req, res) => {
+  try {
+    if(await addDevice(req.body)){
+      res.status(201).send({ message: 'Device added successfully' });
+    } else {
+      res.status(501).send({ message: 'Could not add device' });
+    }
+  } catch (error) {
+    res.status(500).send({ error: error.message });
+  }
+});
 
-if (isDevMode) {
-  const PORT = process.env.TEST_PORT || 3000;
-  app.listen(PORT, () =>
-    console.log(`Node server listening at http://localhost:${PORT}`)
-  );
-} else {
-  exports.app = require("firebase-functions").https.onRequest(app);
-  console.log(`SERVER IS LIVE!!`);
-}
+// Edit Device
+app.post('/device/edit', async (req, res) => {
+  try {
+    const { deviceId, update } = req.body;
+    if(await editDevice(deviceId, update)){
+      res.status(200).send({ message: 'Device updated successfully' });
+    } else {
+      res.status(501).send({ message: 'Could not update device' });
+    }
+  } catch (error) {
+    res.status(500).send({ error: error.message });
+  }
+});
+
+// Remove Device
+app.post('/device/remove', async (req, res) => {
+  try {
+    const { deviceId } = req.body;
+    if(await removeDevice(deviceId)){
+      res.status(200).send({ message: 'Device removed successfully' });
+    } else {
+      res.status(501).send({ message: 'Could not remove device' });
+    }
+  } catch (error) {
+    res.status(500).send({ error: error.message });
+  }
+});
+
+// Get Device Details
+app.post('/device/details', async (req, res) => {
+  try {
+    const { deviceId } = req.body;
+    const device = await getDeviceDetails(deviceId);
+    if(device){
+      res.status(200).send(device);
+    } else {
+      res.status(501).send({ message: 'Could not get device details' });
+    }
+  } catch (error) {
+    res.status(500).send({ error: error.message });
+  }
+});
+
+// Emulate Device Function
+app.post('/device/emulate', async (req, res) => {
+  try {
+    const { deviceId, interval } = req.body;
+    if(await emulateDeviceFunction(deviceId, interval)){
+      res.status(200).send({ message: `Emulation started for device ${deviceId}` });
+    } else {
+      res.status(501).send({ message: 'Could not emulate device' });
+    }
+  } catch (error) {
+    res.status(500).send({ error: error.message });
+  }
+});
+
+// Get Recorded Data
+app.post('/device/data', async (req, res) => {
+  try {
+    const { deviceId } = req.body;
+    const data = await getRecordedData(deviceId);
+    if(data){
+      res.status(200).send(data);
+    } else {
+      res.status(501).send({ message: 'Could not get device records' });
+    }    
+  } catch (error) {
+    res.status(500).send({ error: error.message });
+  }
+});
+/****************************************************************************************** */
+exports.app = require("firebase-functions").https.onRequest(app);
+console.log(`SERVER IS LIVE!!`);
 
