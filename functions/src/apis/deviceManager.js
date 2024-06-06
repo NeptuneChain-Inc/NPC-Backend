@@ -117,7 +117,15 @@ async function recordData(deviceId, data) {
   }
 }
 
-// Enhanced Function to Retrieve Recorded Data with Optional Filtering
+/**
+ * Fetches recorded data for a given device within a specified time range.
+ *
+ * @param {string} deviceId - The ID of the device to fetch records for.
+ * @param {string} [startTimestamp=null] - The start timestamp to filter records.
+ * @param {string} [endTimestamp=null] - The end timestamp to filter records.
+ * @returns {Promise<Object[]>} - A promise that resolves to an array of recorded data objects.
+ * @throws {Error} - Throws an error if the device ID is invalid or if data retrieval fails.
+ */
 async function getRecordedData(deviceId, startTimestamp = null, endTimestamp = null) {
   const isValid = await validateDeviceId(deviceId);
   if (!isValid) {
@@ -125,15 +133,16 @@ async function getRecordedData(deviceId, startTimestamp = null, endTimestamp = n
   }
 
   try {
-    let recordsQuery = query(ref(db, `devices/${deviceId}/records`), orderByChild('timestamp'));
+    // let recordsQuery = query(ref(db, `devices/${deviceId}/records`), orderByChild('Timestamp'));
 
-    if (startTimestamp) {
-      recordsQuery = query(recordsQuery, startAt(startTimestamp));
-    }
-    if (endTimestamp) {
-      recordsQuery = query(recordsQuery, endAt(endTimestamp));
-    }
+    // if (startTimestamp) {
+    //   recordsQuery = query(recordsQuery, startAt(startTimestamp));
+    // }
+    // if (endTimestamp) {
+    //   recordsQuery = query(recordsQuery, endAt(endTimestamp));
+    // }
 
+    const recordsQuery = ref(db, `devices/${deviceId}/records`);
     const snapshot = await get(recordsQuery);
     const data = snapshot.val();
     return data ? Object.values(data) : [];
@@ -148,7 +157,7 @@ async function emulateDeviceFunction(deviceId, interval, maxRunTime = 60000) {
   if (!isValid || typeof interval !== 'number' || interval <= 0) {
     throw new Error('Invalid input');
   }
-  
+
   try {
     const device = await getDeviceDetails(deviceId);
     if (device && device.status === 'active') {
@@ -164,7 +173,7 @@ async function emulateDeviceFunction(deviceId, interval, maxRunTime = 60000) {
       handleError(`Inactive device: Device ${deviceId}:`)
     }
   } catch (error) {
-    handleError(`Error emulating device function for ${deviceId}:`, error);
+    handleError(`Error emulating device function for Device ${deviceId}:`, error);
   }
 }
 
