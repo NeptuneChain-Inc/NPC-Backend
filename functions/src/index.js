@@ -349,7 +349,8 @@ app.post('/device/details', async (req, res) => {
 // Emulate Device Function
 app.post('/device/emulate', async (req, res) => {
   try {
-    if(await emulateDeviceFunction(req.body)){
+    const { deviceId, interval} = req.body;
+    if(await emulateDeviceFunction(deviceId, interval)){
       res.status(200).send({ message: `Emulation started for device ${deviceId}` });
     } else {
       res.status(501).send({ message: 'Could not emulate device' });
