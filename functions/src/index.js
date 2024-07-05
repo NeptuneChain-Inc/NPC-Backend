@@ -7,7 +7,7 @@
 
 /***
  * TO-DO
- * 
+ *
  * CONVERT TO TYPESCRIPT
  */
 
@@ -15,12 +15,16 @@
 const express = require("express");
 const { resolve } = require("path");
 const dotenv = require("dotenv");
-const bodyParser = require('body-parser');
+const bodyParser = require("body-parser");
+const { createProxyMiddleware } = require("http-proxy-middleware");
+const cors = require("cors");
 
 /** SERVER CONFIGS */
 dotenv.config({ path: "./src/.env" });
 
 const app = express();
+
+app.use(cors());
 
 app.use(express.json());
 
@@ -53,8 +57,9 @@ const {
   removeDevice,
   getDeviceDetails,
   emulateDeviceFunction,
-  getRecordedData
-} = require('./apis/deviceManager');
+  getRecordedData,
+  getDevices,
+} = require("./apis/deviceManager");
 
 /***********************************#WEB*ROUTES*********************************************** */
 app.get("/", (req, res) => {
@@ -70,7 +75,7 @@ app.get("/docs", (req, res) => {
 /***********************************#FIREBASE*ROUTES******************************************* */
 app.post("/firebase/config", (req, res) => {
   return res.send({
-    firebaseConfig
+    firebaseConfig,
   });
 });
 
@@ -79,7 +84,7 @@ app.post("/firebase/config", (req, res) => {
 //Required Body params: email, username, type, password
 app.post("/auth/email/create", async (req, res) => {
   try {
-    const user = await authentication.EmailUser.create(req.body)
+    const user = await authentication.EmailUser.create(req.body);
     return res.send({ user });
   } catch (error) {
     return res.status(500).send({ error });
@@ -89,7 +94,7 @@ app.post("/auth/email/create", async (req, res) => {
 //Required Body params: email
 app.post("/auth/email/password_reset", async (req, res) => {
   try {
-    const requested = await authentication.EmailUser.reset_password(req.body)
+    const requested = await authentication.EmailUser.reset_password(req.body);
     return res.send({ requested });
   } catch (error) {
     return res.status(500).send({ error });
@@ -99,9 +104,14 @@ app.post("/auth/email/password_reset", async (req, res) => {
 /***********************************#DATABASE*ROUTES******************************************* */
 // #UserDB get routes
 app.post("/db/user/create/user", async (req, res) => {
-  const {uid, email, username, type} = req.body || {};
+  const { uid, email, username, type } = req.body || {};
   try {
-    const result = await database.UserDB.create.user({uid, email, username, type});
+    const result = await database.UserDB.create.user({
+      uid,
+      email,
+      username,
+      type,
+    });
     return res.send({ result });
   } catch (error) {
     return res.status(500).send({ error });
@@ -135,10 +145,13 @@ app.post("/db/user/get/dashboard", async (req, res) => {
   }
 });
 
-app.post("/db/user/get/media/videos", async (req, res) => {
+// USER MEDIA
+
+app.post("/db/user/get/media/assets", async (req, res) => {
+  const { userUID } = req.body;
   try {
-    const videos = await database.UserDB.get.media.videos(req.body.uid);
-    return res.send({ videos });
+    const user_media = await database.UserDB.get.media.media(userUID);
+    return res.send({ user_media });
   } catch (error) {
     return res.status(500).send({ error });
   }
@@ -146,18 +159,20 @@ app.post("/db/user/get/media/videos", async (req, res) => {
 
 app.post("/db/user/get/media/streams", async (req, res) => {
   try {
-    const streams = await database.UserDB.get.media.streams(req.body.uid);
-    return res.send({ streams });
+    const { userUID } = req.body;
+    const user_streams = await database.UserDB.get.media.streams(userUID);
+    return res.send({ user_streams });
   } catch (error) {
     return res.status(500).send({ error });
   }
 });
 
 // #MediaDB get routes
-app.post("/db/media/get/video", async (req, res) => {
+app.post("/db/media/get/asset", async (req, res) => {
   try {
-    const video = await database.MediaDB.get.video(req.body.playbackId);
-    return res.send({ video });
+    const { assetID } = req.body;
+    const media = await database.MediaDB.get.media(assetID);
+    return res.send({ media });
   } catch (error) {
     return res.status(500).send({ error });
   }
@@ -165,7 +180,8 @@ app.post("/db/media/get/video", async (req, res) => {
 
 app.post("/db/media/get/stream", async (req, res) => {
   try {
-    const stream = await database.MediaDB.get.stream(req.body.playbackId);
+    const { assetID } = req.body;
+    const stream = await database.MediaDB.get.stream(assetID);
     return res.send({ stream });
   } catch (error) {
     return res.status(500).send({ error });
@@ -173,12 +189,20 @@ app.post("/db/media/get/stream", async (req, res) => {
 });
 
 // #MediaDB set routes
-app.post("/db/media/create/video", async (req, res) => {
+app.post("/db/media/create/asset", async (req, res) => {
   try {
-    const result = await database.MediaDB.set.video(
-      req.body.videoAsset,
-      req.body.creatorUID
-    );
+    const { newAssetPaylaod, userUID } = req.body;
+    const result = await database.MediaDB.set.media(newAssetPaylaod, userUID);
+    return res.send({ result });
+  } catch (error) {
+    return res.status(500).send({ error });
+  }
+});
+
+app.post("/db/media/create/asset/metadata", async (req, res) => {
+  try {
+    const { assetID, metadata } = req.body;
+    const result = await database.MediaDB.set.mediaMetadata(assetID, metadata);
     return res.send({ result });
   } catch (error) {
     return res.status(500).send({ error });
@@ -187,9 +211,10 @@ app.post("/db/media/create/video", async (req, res) => {
 
 app.post("/db/media/create/stream", async (req, res) => {
   try {
+    const {streamData, creatorUID} = req.body;
     const result = await database.MediaDB.set.stream(
-      req.body.streamData,
-      req.body.creatorUID
+      streamData,
+      creatorUID
     );
     return res.send({ result });
   } catch (error) {
@@ -209,26 +234,64 @@ app.post("/ethereum/get/signer", async (req, res) => {
 });
 
 /***********************************#LIVEPEER*ROUTES******************************************* */
-app.post("/livepeer/get/client", async (req, res) => {
+
+/** Livepeer Proxy */
+app.use(
+  "/livepeer_origin",
+  createProxyMiddleware({
+    target: "https://origin.livepeer.com",
+    changeOrigin: true,
+    pathRewrite: {
+      "^/livepeer_origin": "",
+    },
+  })
+);
+
+app.post("/livepeer/asset/create", async (req, res) => {
+  const { newAssetPayload, userUID } = req.body;
   try {
-    const livepeerClient = livepeer.getLivepeerClient();
-    return res.send({ livepeerClient });
+    const result = await livepeer.AssetOps.create(newAssetPayload, userUID);
+    return res.send({ result });
   } catch (error) {
     return res.status(500).send({ error });
   }
 });
-app.post("/livepeer/get/viewership", async (req, res) => {
+
+app.post("/livepeer/asset/get", async (req, res) => {
+  const { assetID } = req.body;
   try {
-    const viewership = await livepeer.getViewership(req.body.playbackId);
-    return res.send({ viewership });
+    const asset = await livepeer.AssetOps.get(assetID);
+    return res.send({ asset });
   } catch (error) {
     return res.status(500).send({ error });
   }
 });
-app.post("/livepeer/get/asset_metrics", async (req, res) => {
+
+app.post("/livepeer/asset/update", async (req, res) => {
+  const { assetID, patch } = req.body;
   try {
-    const asset_metrics = await livepeer.getAssetMetrics(req.body.assetId);
-    return res.send({ asset_metrics });
+    const result = await livepeer.AssetOps.update(assetID, patch);
+    return res.send({ result });
+  } catch (error) {
+    return res.status(500).send({ error });
+  }
+});
+
+app.post("/livepeer/asset/delete", async (req, res) => {
+  const { assetID } = req.body;
+  try {
+    const result = await livepeer.AssetOps.delete(assetID);
+    return res.send({ result });
+  } catch (error) {
+    return res.status(500).send({ error });
+  }
+});
+
+app.post("/livepeer/playback/info", async (req, res) => {
+  const { playbackID } = req.body;
+  try {
+    const playbackInfo = await livepeer.PlaybackOps.get.playbackInfo(playbackID);
+    return res.send({ playbackInfo });
   } catch (error) {
     return res.status(500).send({ error });
   }
@@ -290,13 +353,24 @@ app.post("/stripe/get/price", async (req, res) => {
   }
 });
 /*****************************************DEVICE*MANAGEMENT********************************** */
+
 // Add Device
-app.post('/device', async (req, res) => {
+app.post("/devices", async (req, res) => {
   try {
-    if(await addDevice(req.body)){
-      res.status(201).send({ message: 'Device added successfully' });
+    const devices = await getDevices();
+    res.status(201).send({ devices });
+  } catch (error) {
+    res.status(500).send({ error: error.message });
+  }
+});
+
+// Add Device
+app.post("/device", async (req, res) => {
+  try {
+    if (await addDevice(req.body)) {
+      res.status(201).send({ message: "Device added successfully" });
     } else {
-      res.status(501).send({ message: 'Could not add device' });
+      res.status(501).send({ message: "Could not add device" });
     }
   } catch (error) {
     res.status(500).send({ error: error.message });
@@ -304,13 +378,13 @@ app.post('/device', async (req, res) => {
 });
 
 // Edit Device
-app.post('/device/edit', async (req, res) => {
+app.post("/device/edit", async (req, res) => {
   try {
     const { deviceId, update } = req.body;
-    if(await editDevice(deviceId, update)){
-      res.status(200).send({ message: 'Device updated successfully' });
+    if (await editDevice(deviceId, update)) {
+      res.status(200).send({ message: "Device updated successfully" });
     } else {
-      res.status(501).send({ message: 'Could not update device' });
+      res.status(501).send({ message: "Could not update device" });
     }
   } catch (error) {
     res.status(500).send({ error: error.message });
@@ -318,13 +392,13 @@ app.post('/device/edit', async (req, res) => {
 });
 
 // Remove Device
-app.post('/device/remove', async (req, res) => {
+app.post("/device/remove", async (req, res) => {
   try {
     const { deviceId } = req.body;
-    if(await removeDevice(deviceId)){
-      res.status(200).send({ message: 'Device removed successfully' });
+    if (await removeDevice(deviceId)) {
+      res.status(200).send({ message: "Device removed successfully" });
     } else {
-      res.status(501).send({ message: 'Could not remove device' });
+      res.status(501).send({ message: "Could not remove device" });
     }
   } catch (error) {
     res.status(500).send({ error: error.message });
@@ -332,14 +406,14 @@ app.post('/device/remove', async (req, res) => {
 });
 
 // Get Device Details
-app.post('/device/details', async (req, res) => {
+app.post("/device/details", async (req, res) => {
   try {
     const { deviceId } = req.body;
     const device = await getDeviceDetails(deviceId);
-    if(device){
+    if (device) {
       res.status(200).send(device);
     } else {
-      res.status(501).send({ message: 'Could not get device details' });
+      res.status(501).send({ message: "Could not get device details" });
     }
   } catch (error) {
     res.status(500).send({ error: error.message });
@@ -347,13 +421,15 @@ app.post('/device/details', async (req, res) => {
 });
 
 // Emulate Device Function
-app.post('/device/emulate', async (req, res) => {
+app.post("/device/emulate", async (req, res) => {
   try {
-    const { deviceId, interval} = req.body;
-    if(await emulateDeviceFunction(deviceId, interval)){
-      res.status(200).send({ message: `Emulation started for device ${deviceId}` });
+    const { deviceId, interval } = req.body;
+    if (await emulateDeviceFunction(deviceId, interval)) {
+      res
+        .status(200)
+        .send({ message: `Emulation started for device ${deviceId}` });
     } else {
-      res.status(501).send({ message: 'Could not emulate device' });
+      res.status(501).send({ message: "Could not emulate device" });
     }
   } catch (error) {
     res.status(500).send({ error: error.message });
@@ -361,15 +437,15 @@ app.post('/device/emulate', async (req, res) => {
 });
 
 // Get Recorded Data
-app.post('/device/data', async (req, res) => {
+app.post("/device/data", async (req, res) => {
   try {
     const { deviceId } = req.body;
     const data = await getRecordedData(deviceId);
-    if(data){
+    if (data) {
       res.status(200).send(data);
     } else {
-      res.status(501).send({ message: 'Could not get device records' });
-    }    
+      res.status(501).send({ message: "Could not get device records" });
+    }
   } catch (error) {
     res.status(500).send({ error: error.message });
   }
@@ -377,4 +453,3 @@ app.post('/device/data', async (req, res) => {
 /****************************************************************************************** */
 exports.app = require("firebase-functions").https.onRequest(app);
 console.log(`SERVER IS LIVE!!`);
-

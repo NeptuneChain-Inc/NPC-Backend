@@ -1,63 +1,76 @@
-const {
-  LivepeerConfig,
-  createReactClient,
-  studioProvider,
-} = require("@livepeer/react");
+const { Livepeer } = require("livepeer");
+const { MediaDB } = require("./database");
 
-const getLivepeerClient = () =>
-  createReactClient({
-    provider: studioProvider({
-      apiKey: process.env.LIVEPEER_API_KEY,
-    }),
-  });
+const livepeer = new Livepeer({
+  apiKey: process.env.LIVEPEER_API_KEY,
+});
 
-/**
- * Retrieves viewership data for a given playback ID from the Livepeer Studio API.
- * @param {string} playbackId - The ID of the playback for which viewership data is requested.
- * @returns {Promise<Object|null>} - An object containing the viewership data for the specified playback ID.
- * The object has two properties: `viewers` (number) representing the number of viewers and `duration` (number)
- * representing the duration of the playback in seconds. Returns `null` if the response is empty.
- */
-const getViewership = async (playbackId) => {
-  try {
-    const response = await fetch(
-      `https://livepeer.studio/api/data/views/query/total/${playbackId}`,
-      {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${process.env.LIVEPEER_API_KEY}`,
-        },
+const handleError = (error) => {
+  console.log("ERROR", error.message)
+}
+
+ const AssetOps = {
+  create: async (newAssetPaylaod, userUID) => {
+    var result = null;
+    try {
+      const response = await livepeer.asset.create(newAssetPaylaod);
+      const AssetUploadData = response.data;
+      const { asset, tusEndpoint, task } = AssetUploadData || {};
+
+      //Save Transaction To Demo Database
+      if(await MediaDB.set.media(
+        { assetID: asset.id, playbackID: asset.playbackId, tusEndpoint, taskID: task.id },
+        userUID
+      )){
+        result = AssetUploadData;
       }
-    );
-
-    return await response.json();
-  } catch (e) {
-    console.error("Error retrieving viewership data:", e);
-    return null;
-  }
+    } catch (error) {
+      handleError(error);
+      
+    }
+    return result;
+  },
+  get: async (assetID) => {
+    var response = null;
+    try {
+      response = await livepeer.asset.get(assetID);
+    } catch (error) {
+      handleError(error);
+    }
+    return response?.asset;
+  },
+  update: async (assetID, patch) => {
+    var response = null;
+    try {
+      response = await livepeer.asset.update(assetID, patch);
+    } catch (error) {
+      handleError(error);
+    }
+    return response?.asset ? true : null;
+  },
+  delete: async (assetID) => {
+    var response = null;
+    try {
+      response = await livepeer.asset.delete(assetID);
+    } catch (error) {
+      handleError(error);
+    }
+    return response.statusCode === 200 ? true : null;
+  },
 };
 
-/**
- * Retrieves asset metrics from the Livepeer API.
- * @param {string} assetId - The ID of the asset for which to retrieve metrics.
- * @returns {Promise<Object|null>} - The JSON response from the Livepeer API or null if there is no response.
- */
-const getAssetMetrics = async (assetId) => {
-  try {
-    const response = await fetch(
-      `https://livepeer.studio/api/data/views/query/creator?assetId=${assetId}&timeStep=day&breakdownBy[]=timezone`,
-      {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${process.env.LIVEPEER_API_KEY}`,
-        },
-      }
-    );
-    return await response.json();
-  } catch (e) {
-    console.error("Error retrieving asset metrics:", e);
-    return null;
-  }
-};
+const getPlaybackInfo = async (playbackID) => {
+  const {playbackInfo} = await livepeer.playback.get(playbackID) || {};
+  return playbackInfo;
+}
 
-module.exports = { getViewership, getViewership, getAssetMetrics };
+const PlaybackOps = {
+  get: {
+    playbackInfo: getPlaybackInfo
+  }
+}
+
+module.exports = {
+  AssetOps,
+  PlaybackOps
+};

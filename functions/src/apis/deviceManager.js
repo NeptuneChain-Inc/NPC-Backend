@@ -1,12 +1,26 @@
-const { db } = require('./firebase');
-const { ref, set, get, update, remove, push, query, orderByChild, startAt, endAt } = require("firebase/database");
-const { handleError } = require('../scripts/helpers');
+const { db } = require("./firebase");
+const {
+  ref,
+  set,
+  get,
+  update,
+  remove,
+  push,
+  query,
+  orderByChild,
+  startAt,
+  endAt,
+} = require("firebase/database");
+const { handleError } = require("../scripts/helpers");
 
 /** **HELPER-FUNCTIONS***** */
 
 // Validate Device ID and Check Availability
 const validateDeviceId = async (deviceId) => {
-  if ((typeof deviceId !== 'string' && typeof deviceId !== 'number') || !deviceId) {
+  if (
+    (typeof deviceId !== "string" && typeof deviceId !== "number") ||
+    !deviceId
+  ) {
     return false;
   }
 
@@ -26,18 +40,30 @@ const generateRandomRecords = () => {
     Timestamp: new Date().toISOString(),
     Turbidity: (Math.random() * 40).toFixed(2),
     "Water Temperature": (Math.random() * 35).toFixed(2),
-    "pH Level": (Math.random() * 14).toFixed(2)
+    "pH Level": (Math.random() * 14).toFixed(2),
   };
 };
 
 /** **HELPER-FUNCTIONS-END***** */
+
+async function getDevices() {
+  try {
+    const snapshot = await get(ref(db, `devices`));
+    if (snapshot.exists()) {
+      return Object.keys(snapshot.val());
+    }
+  } catch (error) {
+    handleError(`Error getting device:`, error);
+  }
+  return null;
+}
 
 // Function to Add a Device
 async function addDevice(device) {
   const { id } = device || {};
   const isValid = await validateDeviceId(id);
   if (!isValid) {
-    throw new Error('Invalid device ID');
+    throw new Error("Invalid device ID");
   }
 
   try {
@@ -53,7 +79,7 @@ async function addDevice(device) {
 async function editDevice(deviceId, updateData) {
   const isValid = await validateDeviceId(deviceId);
   if (!isValid || !updateData) {
-    throw new Error('Invalid input');
+    throw new Error("Invalid input");
   }
 
   try {
@@ -69,7 +95,7 @@ async function editDevice(deviceId, updateData) {
 async function removeDevice(deviceId) {
   const isValid = await validateDeviceId(deviceId);
   if (!isValid) {
-    throw new Error('Invalid device ID');
+    throw new Error("Invalid device ID");
   }
 
   try {
@@ -85,7 +111,7 @@ async function removeDevice(deviceId) {
 async function getDeviceDetails(deviceId) {
   const isValid = await validateDeviceId(deviceId);
   if (!isValid) {
-    throw new Error('Invalid device ID');
+    throw new Error("Invalid device ID");
   }
 
   try {
@@ -105,7 +131,7 @@ async function getDeviceDetails(deviceId) {
 async function recordData(deviceId, data) {
   const isValid = await validateDeviceId(deviceId);
   if (!isValid || !data) {
-    throw new Error('Invalid input');
+    throw new Error("Invalid input");
   }
 
   try {
@@ -126,10 +152,14 @@ async function recordData(deviceId, data) {
  * @returns {Promise<Object[]>} - A promise that resolves to an array of recorded data objects.
  * @throws {Error} - Throws an error if the device ID is invalid or if data retrieval fails.
  */
-async function getRecordedData(deviceId, startTimestamp = null, endTimestamp = null) {
+async function getRecordedData(
+  deviceId,
+  startTimestamp = null,
+  endTimestamp = null
+) {
   const isValid = await validateDeviceId(deviceId);
   if (!isValid) {
-    throw new Error('Invalid device ID');
+    throw new Error("Invalid device ID");
   }
 
   try {
@@ -147,42 +177,48 @@ async function getRecordedData(deviceId, startTimestamp = null, endTimestamp = n
     const data = snapshot.val();
     return data ? Object.values(data) : [];
   } catch (error) {
-    handleError(`Error retrieving recorded data for device ${deviceId}:`, error);
+    handleError(
+      `Error retrieving recorded data for device ${deviceId}:`,
+      error
+    );
   }
 }
 
 // Emulate Device Functionality
 async function emulateDeviceFunction(deviceId, interval, maxRunTime = 60000) {
   const isValid = await validateDeviceId(deviceId);
-  if (!isValid || typeof interval !== 'number' || interval <= 0) {
-    throw new Error('Invalid input');
+  if (!isValid || typeof interval !== "number" || interval <= 0) {
+    throw new Error("Invalid input");
   }
 
   try {
     const device = await getDeviceDetails(deviceId);
-    if (device && device.status === 'active') {
+    if (device && device.status === "active") {
       const data = generateRandomRecords();
-      if(await recordData(deviceId, data)){
-        console.log(`Recorded data for device ${deviceId}:`, data); 
-        return true; 
+      if (await recordData(deviceId, data)) {
+        console.log(`Recorded data for device ${deviceId}:`, data);
+        return true;
       } else {
-        handleError(`Could not record data for device ${deviceId}:`, data)
-      };
-      
+        handleError(`Could not record data for device ${deviceId}:`, data);
+      }
     } else {
-      handleError(`Inactive device: Device ${deviceId}:`)
+      handleError(`Inactive device: Device ${deviceId}:`);
     }
   } catch (error) {
-    handleError(`Error emulating device function for Device ${deviceId}:`, error);
+    handleError(
+      `Error emulating device function for Device ${deviceId}:`,
+      error
+    );
   }
 }
 
 module.exports = {
+  getDevices,
   addDevice,
   editDevice,
   removeDevice,
   getDeviceDetails,
   recordData,
   getRecordedData,
-  emulateDeviceFunction
+  emulateDeviceFunction,
 };

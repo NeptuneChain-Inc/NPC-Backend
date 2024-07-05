@@ -1,7 +1,8 @@
 /**
  * NOTES:
- * #TODO: Create getVideos && getStreams query functions
+ * #TODO: Create getMedia && getStreams query functions
  */
+const { ref, get, set, push } = require("firebase/database");
 const { db } = require("../apis/firebase");
 
 /*************************************************************************************** */
@@ -14,34 +15,16 @@ const sanitizeUserInput = (input) => String(input).replace(/[^a-z0-9]/gi, "");
 
 /*************************************************************************************** */
 
-const _getData = async (path) => {
-  const snapshot = await db.doc(path).get();
-  if (snapshot.exists()) {
-    const documents = [];
-    snapshot.forEach((doc) => {
-      documents.push({ id: doc.id, data: doc.data() });
-    });
-    return documents;
-  }
-  return null;
-};
+const _getData = async (path) => (await get(ref(db, path)))?.val();
 
 const _saveData = async (path, data) => {
-  try {
-    await db.doc(path).set(data);
-    return true;
-  } catch (e) {
-    throw e;
-  }
+  await set(ref(db, path), data);
+  return Promise.resolve(true);
 };
 
 const _pushData = async (path, data) => {
-  try {
-    const res = await db.doc(path).add(data);
-    return res.id;
-  } catch (e) {
-    throw e;
-  }
+  await push(ref(db, path), data);
+  return Promise.resolve(true);
 };
 /**
  * Loads the default template for a user's dashboard data.
@@ -75,8 +58,8 @@ const getUsername = async (username) =>
     )
   );
 
-const getVideo = async (playbackId) =>
-  await _getData(`neptunechain/livepeer/videos/${playbackId}`);
+const getMedia = async (assetId) =>
+  await _getData(`neptunechain/livepeer/media/${assetId}`);
 
 const getStream = async (playbackId) =>
   await _getData(`neptunechain/livepeer/streams/${playbackId}`);
@@ -89,19 +72,21 @@ const getUserDashboard = async (uid) =>
   await _getData(`neptunechain/users/data/${uid}/dashboard/`);
 
 /**
- * Retrieves a list of videos associated with a user.
+ * Retrieves a list of media associated with a user.
  *
  * @param {string} uid - The unique identifier of the user.
- * @returns {Promise<Array>} - A promise that resolves to an array of videos.
+ * @returns {Promise<Array>} - A promise that resolves to an array of media.
  */
-const getUserVideos = async (uid) => {
-  const videoIDs = await _getData(`neptunechain/users/data/${uid}/videos/`);
-  const videos = [];
-  for (const videoID of Object.keys(videoIDs || {})) {
-    const video = await getVideo(videoID);
-    videos.push(video);
+const getUserMedia = async (uid) => {
+  const mediaIDs = await _getData(`neptunechain/users/data/${uid}/media/`);
+  const media = [];
+  for (const mediaID of Object.values(mediaIDs || {})) {
+    const mediaData = await getMedia(mediaID);
+    if(mediaData){
+      media.push(mediaData);
+    }
   }
-  return videos;
+  return media;
 };
 
 /**
@@ -113,7 +98,7 @@ const getUserVideos = async (uid) => {
 const getUserStreams = async (uid) => {
   const streamIDs = await _getData(`neptunechain/users/data/${uid}/streams/`);
   const streams = [];
-  for (const streamID of Object.keys(streamIDs || {})) {
+  for (const streamID of Object.values(streamIDs || {})) {
     const stream = await getStream(streamID);
     streams.push(stream);
   }
@@ -188,28 +173,70 @@ const saveStream = async (streamData, creatorUID) => {
   }
 };
 
-/**
- * Saves a video asset to the database and associates it with a creator.
- *
- * @param {Object} videoAsset - The video asset to be saved.
- * @param {string} creatorUID - The unique identifier of the creator.
- * @returns {Promise<string|null>} - A promise that resolves to the playbackId of the saved video asset, or null if the saving process fails.
- * @throws {Error} - If an error occurs during the saving process.
- */
-const saveVideo = async (videoAsset, creatorUID) => {
+// const saveAsset = async (newAssetPaylaod, creatorUID) => {
+//   try {
+//     const { asset_id } = newAssetPaylaod || {};
+//     if (asset_id && creatorUID) {
+//       if (
+//         await _saveData(
+//           `neptunechain/livepeer/media/${asset_id}`,
+//           {
+//             tusEnd
+//           }
+//         )
+//       ) {
+//         return await _pushData(
+//           `neptunechain/users/data/${creatorUID}/media`,
+//           playbackId
+//         );
+//       }
+//     }
+//   } catch (e) {
+//     throw e;
+//   }
+// };
+
+const saveMedia = async (newMediaPaylaod, creatorUID) => {
   try {
-    const { playbackId } = videoAsset || {};
-    if (playbackId && creatorUID) {
+    const { assetID, playbackID, tusEndpoint, taskID } = newMediaPaylaod || {};
+    if (assetID && creatorUID) {
       if (
-        await _saveData(
-          `neptunechain/livepeer/videos/${playbackId}`,
-          videoAsset
-        )
+        await _saveData(`neptunechain/livepeer/media/${assetID}`, {
+          assetID,
+          creatorUID,
+          playbackID,
+          tusEndpoint,
+          taskID,
+        })
       ) {
         return await _pushData(
-          `neptunechain/users/data/${creatorUID}/videos`,
-          playbackId
+          `neptunechain/users/data/${creatorUID}/media`,
+          assetID
         );
+      }
+    }
+  } catch (e) {
+    throw e;
+  }
+};
+/**
+ *
+ * @param {string} assetID
+ * @param {{ name: string, description: string, tags: string[], thumbnailUrl: string }} metadata
+ * @returns
+ */
+const setMediaMetadata = async (assetID, metadata) => {
+  try {
+    if (assetID) {
+      const path = `neptunechain/livepeer/media/${assetID}`;
+      const media = await _getData(path);
+      if (
+        await _saveData(path, {
+          ...media,
+          metadata,
+        })
+      ) {
+        return true;
       }
     }
   } catch (e) {
@@ -223,7 +250,7 @@ const UserDB = {
     username: getUsername,
     dashboard: getUserDashboard,
     media: {
-      videos: getUserVideos,
+      media: getUserMedia,
       streams: getUserStreams,
     },
   },
@@ -234,13 +261,14 @@ const UserDB = {
 
 const MediaDB = {
   get: {
-    video: getVideo,
+    media: getMedia,
     stream: getStream,
-    // videos: getVideos,
+    // media: getMedia,
     // streams: getStreams,
   },
   set: {
-    video: saveVideo,
+    media: saveMedia,
+    mediaMetadata: setMediaMetadata,
     stream: saveStream,
   },
 };
