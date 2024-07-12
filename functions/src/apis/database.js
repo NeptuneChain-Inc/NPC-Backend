@@ -71,39 +71,32 @@ const getUser = async (uid) => await _getData(`neptunechain/users/data/${uid}`);
 const getUserDashboard = async (uid) =>
   await _getData(`neptunechain/users/data/${uid}/dashboard/`);
 
-/**
- * Retrieves a list of media associated with a user.
- *
- * @param {string} uid - The unique identifier of the user.
- * @returns {Promise<Array>} - A promise that resolves to an array of media.
- */
-const getUserMedia = async (uid) => {
-  const mediaIDs = await _getData(`neptunechain/users/data/${uid}/media/`);
-  const media = [];
-  for (const mediaID of Object.values(mediaIDs || {})) {
-    const mediaData = await getMedia(mediaID);
-    if(mediaData){
-      media.push(mediaData);
+const _getCollection = async (path) => {
+  const collectionIDs = await _getData(path);
+  const collection = [];
+  for (const collectionID of Object.values(collectionIDs || {})) {
+    const collectionData = await getMedia(collectionID);
+    if (collectionData) {
+      collection.push(collectionData);
     }
   }
-  return media;
+  return collection;
 };
 
-/**
- * Retrieves the streams associated with a user.
- *
- * @param {string} uid - The user ID.
- * @returns {Promise<Array>} - A promise that resolves to an array of streams.
- */
-const getUserStreams = async (uid) => {
-  const streamIDs = await _getData(`neptunechain/users/data/${uid}/streams/`);
-  const streams = [];
-  for (const streamID of Object.values(streamIDs || {})) {
-    const stream = await getStream(streamID);
-    streams.push(stream);
-  }
-  return streams;
-};
+const getUserMedia = async (uid) =>
+  _getCollection(`neptunechain/users/data/${uid}/media/`);
+
+const getUserSubmissions = async (uid) =>
+  _getCollection(`neptunechain/users/data/${uid}/assets/submissions`);
+
+const getUserDisputes = async (uid) =>
+  _getCollection(`neptunechain/users/data/${uid}/assets/disputes`);
+
+const getUserApprovals = async (uid) =>
+  _getCollection(`neptunechain/users/data/${uid}/assets/approvals`);
+
+const getUserStreams = async (uid) =>
+  _getCollection(`neptunechain/users/data/${uid}/streams/`);
 
 /**************************************************************************************** */
 
@@ -219,6 +212,40 @@ const saveMedia = async (newMediaPaylaod, creatorUID) => {
     throw e;
   }
 };
+
+const AddUserSubmission = async (assetID, uid) => {
+  try {
+    return await _pushData(
+      `neptunechain/users/data/${uid}/assets/submissions`,
+      assetID
+    );
+  } catch (error) {
+    throw error;
+  }
+};
+
+const AddUserDispute = async (assetID, uid) => {
+  try {
+    return await _pushData(
+      `neptunechain/users/data/${uid}/assets/disputes`,
+      assetID
+    );
+  } catch (error) {
+    throw error;
+  }
+};
+
+const AddUserApproval = async (assetID, uid) => {
+  try {
+    return await _pushData(
+      `neptunechain/users/data/${uid}/assets/approvals`,
+      assetID
+    );
+  } catch (error) {
+    throw error;
+  }
+};
+
 /**
  *
  * @param {string} assetID
@@ -252,6 +279,18 @@ const UserDB = {
     media: {
       media: getUserMedia,
       streams: getUserStreams,
+    },
+    assets: {
+      add: {
+        submission: AddUserSubmission,
+        dispute: AddUserDispute,
+        approval: AddUserApproval,
+      },
+      get: {
+        submissions: getUserSubmissions,
+        disputes: getUserDisputes,
+        approvals: getUserApprovals,
+      },
     },
   },
   create: {

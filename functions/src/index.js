@@ -157,6 +157,36 @@ app.post("/db/user/get/media/assets", async (req, res) => {
   }
 });
 
+app.post("/db/user/get/media/assets/submissions", async (req, res) => {
+  const { userUID } = req.body;
+  try {
+    const user_submissions = await database.UserDB.get.assets.get.submissions(userUID);
+    return res.send({ user_submissions });
+  } catch (error) {
+    return res.status(500).send({ error });
+  }
+});
+
+app.post("/db/user/get/media/assets/disputes", async (req, res) => {
+  const { userUID } = req.body;
+  try {
+    const user_disputes = await database.UserDB.get.assets.get.disputes(userUID);
+    return res.send({ user_disputes });
+  } catch (error) {
+    return res.status(500).send({ error });
+  }
+});
+
+app.post("/db/user/get/media/assets/approvals", async (req, res) => {
+  const { userUID } = req.body;
+  try {
+    const user_approvals = await database.UserDB.get.assets.get.approvals(userUID);
+    return res.send({ user_approvals });
+  } catch (error) {
+    return res.status(500).send({ error });
+  }
+});
+
 app.post("/db/user/get/media/streams", async (req, res) => {
   try {
     const { userUID } = req.body;
@@ -193,6 +223,36 @@ app.post("/db/media/create/asset", async (req, res) => {
   try {
     const { newAssetPaylaod, userUID } = req.body;
     const result = await database.MediaDB.set.media(newAssetPaylaod, userUID);
+    return res.send({ result });
+  } catch (error) {
+    return res.status(500).send({ error });
+  }
+});
+
+app.post("/db/media/create/asset/submission", async (req, res) => {
+  try {
+    const { assetID, userUID } = req.body;
+    const result = await database.UserDB.get.assets.add.submission(assetID,userUID);
+    return res.send({ result });
+  } catch (error) {
+    return res.status(500).send({ error });
+  }
+});
+
+app.post("/db/media/create/asset/dispute", async (req, res) => {
+  try {
+    const { assetID, userUID } = req.body;
+    const result = await database.UserDB.get.assets.add.dispute(assetID, userUID);
+    return res.send({ result });
+  } catch (error) {
+    return res.status(500).send({ error });
+  }
+});
+
+app.post("/db/media/create/asset/approval", async (req, res) => {
+  try {
+    const { assetID, userUID } = req.body;
+    const result = await database.UserDB.get.assets.add.approval(assetID,userUID);
     return res.send({ result });
   } catch (error) {
     return res.status(500).send({ error });
