@@ -60,6 +60,8 @@ const {
   getRecordedData,
   getDevices,
 } = require("./apis/deviceManager");
+const {Verification} = require("./apis/neptunechain");
+const {params} = require("firebase-functions");
 
 /***********************************#WEB*ROUTES*********************************************** */
 app.get("/", (req, res) => {
@@ -228,11 +230,11 @@ app.post("/db/media/create/asset", async (req, res) => {
     return res.status(500).send({ error });
   }
 });
-
-app.post("/db/media/create/asset/submission", async (req, res) => {
+/***************************ASSET*MANAGEMENT************************ */
+app.post("/db/media/create/asset/submit", async (req, res) => {
   try {
-    const { assetID, userUID } = req.body;
-    const result = await database.UserDB.get.assets.add.submission(assetID,userUID);
+    const { userUID, assetID } = req.body;
+    const result = await Verification.submitAsset(userUID, assetID);
     return res.send({ result });
   } catch (error) {
     return res.status(500).send({ error });
@@ -241,24 +243,40 @@ app.post("/db/media/create/asset/submission", async (req, res) => {
 
 app.post("/db/media/create/asset/dispute", async (req, res) => {
   try {
-    const { assetID, userUID } = req.body;
-    const result = await database.UserDB.get.assets.add.dispute(assetID, userUID);
+    const { userUID, assetID, reason } = req.body;
+    const result = await Verification.disputeAsset(userUID, assetID, reason);
     return res.send({ result });
   } catch (error) {
     return res.status(500).send({ error });
   }
 });
 
-app.post("/db/media/create/asset/approval", async (req, res) => {
+/**
+ * { solution, status } = params 
+ */
+app.post("/db/media/create/asset/dispute/close", async (req, res) => {
   try {
-    const { assetID, userUID } = req.body;
-    const result = await database.UserDB.get.assets.add.approval(assetID,userUID);
+    const { userUID, disputeID, params } = req.body;
+    const result = await Verification.resolveAsset(userUID, disputeID, params);
     return res.send({ result });
   } catch (error) {
     return res.status(500).send({ error });
   }
 });
 
+/**
+ * { creditTypes, creditSupplyLimits } = params
+ */
+app.post("/db/media/create/asset/approve", async (req, res) => {
+  try {
+    const { userUID, assetID, params } = req.body;
+    const result = await Verification.approveAsset(userUID, assetID, params);
+    return res.send({ result });
+  } catch (error) {
+    return res.status(500).send({ error });
+  }
+});
+/************************************************************************ */
 app.post("/db/media/create/asset/metadata", async (req, res) => {
   try {
     const { assetID, metadata } = req.body;

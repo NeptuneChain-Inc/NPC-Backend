@@ -92,6 +92,8 @@ const getUserSubmissions = async (uid) =>
 const getUserDisputes = async (uid) =>
   _getCollection(`neptunechain/users/data/${uid}/assets/disputes`);
 
+const getUserClosedDisputes = async (uid) => _getCollection(`neptunechain/users/data/${uid}/assets/disputes/closed`);
+
 const getUserApprovals = async (uid) =>
   _getCollection(`neptunechain/users/data/${uid}/assets/approvals`);
 
@@ -213,33 +215,44 @@ const saveMedia = async (newMediaPaylaod, creatorUID) => {
   }
 };
 
-const AddUserSubmission = async (assetID, uid) => {
+const AddUserSubmission = async (uid, assetID, txHash) => {
   try {
     return await _pushData(
       `neptunechain/users/data/${uid}/assets/submissions`,
-      assetID
+      {assetID, txHash}
     );
   } catch (error) {
     throw error;
   }
 };
 
-const AddUserDispute = async (assetID, uid) => {
+const AddUserDispute = async (uid, assetID, txHash) => {
   try {
     return await _pushData(
       `neptunechain/users/data/${uid}/assets/disputes`,
-      assetID
+      {assetID, txHash}
     );
   } catch (error) {
     throw error;
   }
 };
 
-const AddUserApproval = async (assetID, uid) => {
+const AddUserClosedDispute = async (uid, disputeID, txHash) => {
+  try {
+    return await _pushData(
+      `neptunechain/users/data/${uid}/assets/disputes/closed`,
+      {disputeID, txHash}
+    );
+  } catch (error) {
+    throw error;
+  }
+};
+
+const AddUserApproval = async (uid, assetID, txHash) => {
   try {
     return await _pushData(
       `neptunechain/users/data/${uid}/assets/approvals`,
-      assetID
+      {assetID, txHash}
     );
   } catch (error) {
     throw error;
@@ -284,11 +297,13 @@ const UserDB = {
       add: {
         submission: AddUserSubmission,
         dispute: AddUserDispute,
+        dispute_closed: AddUserClosedDispute,
         approval: AddUserApproval,
       },
       get: {
         submissions: getUserSubmissions,
         disputes: getUserDisputes,
+        dispute_closed: getUserClosedDisputes,
         approvals: getUserApprovals,
       },
     },

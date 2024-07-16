@@ -1,21 +1,23 @@
 const { ethers } = require("ethers");
 
-/**
- * Retrieves the signer object for the current application wallet.
- * 
- * @returns {Object} An object containing the provider, wallet, and signer.
- * @throws {Error} If there is an error retrieving the signer.
- */
-const getSigner = async () => {
-  try {
-    const network = process.env.NETWORK_TYPE === "production" ? "mainnet" : "testnet";
-    const provider = new ethers.providers.JsonRpcProvider(process.env[`${network.toUpperCase()}_RPC`]);
-    const wallet = new ethers.Wallet(process.env.APP_WALLET_KEY, provider);
-    const signer = wallet.connect(provider);
-    return { provider, wallet, signer };
-  } catch (error) {
-    throw error;
+const getSigner = () => {
+  const network =
+    process.env.NETWORK_TYPE === "production" ? "mainnet" : "testnet";
+  const rpc = process.env[`${network.toUpperCase()}_RPC`];
+  const key = process.env.APP_WALLET_KEY;
+
+  if (rpc && key) {
+    try {
+      const provider = new ethers.JsonRpcProvider(rpc);
+      const wallet = new ethers.Wallet(key, provider);
+      const signer = wallet.connect(provider);
+      return signer;
+    } catch (error) {
+      throw error;
+    }
   }
+
+  return null;
 };
 
-module.exports = { getSigner }
+module.exports = { getSigner };
