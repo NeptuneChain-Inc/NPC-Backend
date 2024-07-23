@@ -1,15 +1,3 @@
-/**
- * NOTES:
- *  STATUS CODES : {
- *  500:  Indicating that the request was accepted, but that an error on the server prevented the fulfillment of the request.
- * }
- */
-
-/***
- * TO-DO
- *
- * CONVERT TO TYPESCRIPT
- */
 
 /** SERVER MODULES */
 const express = require("express");
@@ -19,38 +7,12 @@ const bodyParser = require("body-parser");
 const { createProxyMiddleware } = require("http-proxy-middleware");
 const cors = require("cors");
 
-/** SERVER CONFIGS */
-dotenv.config({ path: "./src/.env" });
-
-const app = express();
-
-app.use(cors());
-
-app.use(express.json());
-
-app.use(express.static("./public"));
-
-// ##NB Set which addresses have access to server.
-app.use(function (req, res, next) {
-  res.header("Access-Control-Allow-Origin", "http://app.neptunechain.io");
-  res.header(
-    "Access-Control-Allow-Headers",
-    "Origin, X-Requested-With, Content-Type, Accept"
-  );
-  next();
-});
-
-app.use(bodyParser.json());
-
 /** API IMPORTS */
-// const authentication = require("./apis/authentication");
 const database = require("./apis/database");
-const ethereum = require("./apis/ethereum");
 const moralis = require("./apis/moralis");
 const livepeer = require("./apis/livepeer");
 const maps = require("./apis/maps");
 const stripe = require("./apis/stripe");
-// const { firebaseConfig } = require("./apis/firebase");
 const {
   addDevice,
   editDevice,
@@ -61,23 +23,41 @@ const {
   getDevices,
 } = require("./apis/deviceManager");
 const {Verification} = require("./apis/neptunechain");
-// const {params} = require("firebase-functions");
+
+/** SERVER CONFIGS */
+dotenv.config({ path: "./src/.env" });
+
+const app = express();
+
+app.use(cors());
+app.use(express.json());
+app.use(express.static("./public"));
+app.use(bodyParser.json());
+
+app.use(function (req, res, next) {
+  res.header("Access-Control-Allow-Origin", "http://app.neptunechain.io");
+  res.header(
+    "Access-Control-Allow-Headers",
+    "Origin, X-Requested-With, Content-Type, Accept"
+  );
+  next();
+});
 
 /*[#1]**********************************#WEB*ROUTES*********************************************** */
-app.get("/", (req, res) => {
-  const path = resolve("/index.html");
+app.get('/', (req, res) => {
+  const path = resolve('/index.html');
   res.sendFile(path);
 });
 
-app.get("/docs", (req, res) => {
-  const path = resolve("/docs.html");
+app.get('/docs', (req, res) => {
+  const path = resolve('/docs.html');
   res.sendFile(path);
 });
 
 /*[#2]*********************************USER*DATABASE*ROUTES******************************************* */
 // #UserDB get routes
 app.post("/db/user/create", async (req, res) => {
-  const { uid, email, username, type } = req.body || {};
+  const { uid, email, username, type } = req.body;
   try {
     const result = await database.UserDB.create.user({
       uid,
@@ -102,14 +82,12 @@ app.post("/db/user/get", async (req, res) => {
 
 app.post("/db/user/get/username", async (req, res) => {
   try {
-    const username = await database.UserDB.get.username(req.body.username);
-    return res.send({ username });
+    const userUID = await database.UserDB.get.username(req.body.username);
+    return res.send({ userUID });
   } catch (error) {
     return res.status(500).send({ error });
   }
 });
-
-/*[#3]******************USER*MEDIA*ROUTES************************ */
 
 /**
  * @api {post} /db/user/get/media Get media  from user database
@@ -132,19 +110,17 @@ app.post("/db/user/get/media", async (req, res) => {
   }
 });
 
-/*[#4]******************MEDIA*ROUTES************************ */
-// #MediaDB get routes
-app.post("/db/get/asset", async (req, res) => {
+app.post("/db/user/get/streams", async (req, res) => {
   try {
-    const { assetID } = req.body;
-    const media = await database.MediaDB.get.media(assetID);
-    return res.send({ media });
+    const { userUID } = req.body;
+    const user_streams = await database.UserDB.get.media.streams(userUID);
+    return res.send({ user_streams });
   } catch (error) {
     return res.status(500).send({ error });
   }
 });
 
-/*[#5]******************USER*ASSETS*ROUTES************************ */
+/*[#3]******************USER*ASSETS*ROUTES************************ */
 /**
  * @api {post} /db/user/get/assets Get assets submitted by user (submissions)
  * @apiName GetUserAssets
@@ -208,10 +184,20 @@ app.post("/db/user/get/asset/approvals", async (req, res) => {
   }
 });
 
-/*[#6]**************************ASSET*MANAGEMENT************************ */
+/*[#4]**********************DATABASE*ASSET*CREATION********************** */
+// Get Asset
+app.post("/db/asset/get", async (req, res) => {
+  try {
+    const { assetID } = req.body;
+    const media = await database.MediaDB.get.media(assetID);
+    return res.send({ media });
+  } catch (error) {
+    return res.status(500).send({ error });
+  }
+});
 
 // Create/Upload Asset
-app.post("/db/media/create/asset", async (req, res) => {
+app.post("/db/asset/create", async (req, res) => {
   try {
     const { newAssetPaylaod, userUID } = req.body;
     const result = await database.MediaDB.set.media(newAssetPaylaod, userUID);
@@ -222,7 +208,7 @@ app.post("/db/media/create/asset", async (req, res) => {
 });
 
 // Ammend metadata to asset
-app.post("/db/media/create/asset/metadata", async (req, res) => {
+app.post("/db/asset/create/metadata", async (req, res) => {
   try {
     const { assetID, metadata } = req.body;
     const result = await database.MediaDB.set.mediaMetadata(assetID, metadata);
@@ -233,7 +219,7 @@ app.post("/db/media/create/asset/metadata", async (req, res) => {
 });
 
 // Submit asset
-app.post("/db/media/create/asset/submit", async (req, res) => {
+app.post("/db/asset/create/submit", async (req, res) => {
   try {
     const { userUID, assetID } = req.body;
     const result = await Verification.submitAsset(userUID, assetID);
@@ -244,7 +230,7 @@ app.post("/db/media/create/asset/submit", async (req, res) => {
 });
 
 // Dispute Asset
-app.post("/db/media/create/asset/dispute", async (req, res) => {
+app.post("/db/asset/create/dispute", async (req, res) => {
   try {
     const { userUID, assetID, reason } = req.body;
     const result = await Verification.disputeAsset(userUID, assetID, reason);
@@ -257,7 +243,7 @@ app.post("/db/media/create/asset/dispute", async (req, res) => {
 /** Resolve Dispute
  * { solution, status } = params 
  */
-app.post("/db/media/create/asset/dispute/close", async (req, res) => {
+app.post("/db/asset/create/dispute/close", async (req, res) => {
   try {
     const { userUID, disputeID, params } = req.body;
     const result = await Verification.resolveAsset(userUID, disputeID, params);
@@ -270,7 +256,7 @@ app.post("/db/media/create/asset/dispute/close", async (req, res) => {
 /** Approve Asset
  * { creditTypes, creditSupplyLimits } = params
  */
-app.post("/db/media/create/asset/approve", async (req, res) => {
+app.post("/db/asset/create/approve", async (req, res) => {
   try {
     const { userUID, assetID, params } = req.body;
     const result = await Verification.approveAsset(userUID, assetID, params);
@@ -280,53 +266,7 @@ app.post("/db/media/create/asset/approve", async (req, res) => {
   }
 });
 
-/*[#7]*************************STREAM**MANAGEMENT************************************************** */
-
-app.post("/db/media/create/stream", async (req, res) => {
-  try {
-    const {streamData, creatorUID} = req.body;
-    const result = await database.MediaDB.set.stream(
-      streamData,
-      creatorUID
-    );
-    return res.send({ result });
-  } catch (error) {
-    return res.status(500).send({ error });
-  }
-});
-
-app.post("/db/user/get/streams", async (req, res) => {
-  try {
-    const { userUID } = req.body;
-    const user_streams = await database.UserDB.get.media.streams(userUID);
-    return res.send({ user_streams });
-  } catch (error) {
-    return res.status(500).send({ error });
-  }
-});
-
-app.post("/db/media/get/stream", async (req, res) => {
-  try {
-    const { assetID } = req.body;
-    const stream = await database.MediaDB.get.stream(assetID);
-    return res.send({ stream });
-  } catch (error) {
-    return res.status(500).send({ error });
-  }
-});
-
-/*[#8]**********************************#ETHEREUM*ROUTES******************************************* */
-/** #ENSURE PROPER AUTHORIZATIONS */
-app.post("/ethereum/get/signer", async (req, res) => {
-  try {
-    const signer = await ethereum.getSigner();
-    return res.send({ signer });
-  } catch (error) {
-    return res.status(500).send({ error });
-  }
-});
-
-/*[#9]**********************************#LIVEPEER*ROUTES******************************************* */
+/*[#5]**********************************#LIVEPEER*ROUTES******************************************* */
 
 /** Livepeer Proxy */
 app.use(
@@ -339,19 +279,6 @@ app.use(
     },
   })
 );
-
-/**
- * 
- */
-app.post("/livepeer/asset/create", async (req, res) => {
-  const { newAssetPayload, userUID } = req.body;
-  try {
-    const result = await livepeer.AssetOps.create(newAssetPayload, userUID);
-    return res.send({ result });
-  } catch (error) {
-    return res.status(500).send({ error });
-  }
-});
 
 app.post("/livepeer/asset/get", async (req, res) => {
   const { assetID } = req.body;
@@ -383,7 +310,7 @@ app.post("/livepeer/asset/delete", async (req, res) => {
   }
 });
 
-app.post("/livepeer/playback/info", async (req, res) => {
+app.post("/livepeer/asset/info/playback", async (req, res) => {
   const { playbackID } = req.body;
   try {
     const playbackInfo = await livepeer.PlaybackOps.get.playbackInfo(playbackID);
@@ -393,7 +320,31 @@ app.post("/livepeer/playback/info", async (req, res) => {
   }
 });
 
-/*[#10]**********************************#MAPS*ROUTES*********************************************** */
+/*[#6]*************************STREAM**MANAGEMENT************************************************** */
+app.post("/db/media/get/stream", async (req, res) => {
+  try {
+    const { assetID } = req.body;
+    const stream = await database.MediaDB.get.stream(assetID);
+    return res.send({ stream });
+  } catch (error) {
+    return res.status(500).send({ error });
+  }
+});
+
+app.post("/db/media/create/stream", async (req, res) => {
+  try {
+    const {streamData, creatorUID} = req.body;
+    const result = await database.MediaDB.set.stream(
+      streamData,
+      creatorUID
+    );
+    return res.send({ result });
+  } catch (error) {
+    return res.status(500).send({ error });
+  }
+});
+
+/*[#7]**********************************#MAPS*ROUTES*********************************************** */
 app.post("/maps/get/api", async (req, res) => {
   try {
     const api = await maps.getMapsAPI();
@@ -403,7 +354,7 @@ app.post("/maps/get/api", async (req, res) => {
   }
 });
 
-/*[#11]**********************************#MORALIS*ROUTES******************************************** */
+/*[#8]**********************************#MORALIS*ROUTES******************************************** */
 app.post("/moralis/get/wallet_nfts", async (req, res) => {
   try {
     const { address } = req.body || {};
@@ -424,7 +375,7 @@ app.post("/moralis/get/nft_metadata", async (req, res) => {
   }
 });
 
-/*[#12]**********************************#STIPE*ROUTES******************************************* */
+/*[#9]**********************************#STIPE*ROUTES******************************************* */
 app.post("/stripe/config", (req, res) => {
   return res.send({
     publishableKey: process.env.STRIPE_PUBLISHABLE_KEY,
@@ -448,7 +399,7 @@ app.post("/stripe/get/price", async (req, res) => {
     return res.status(500).send({ error });
   }
 });
-/*[#13]****************************************DEVICE*MANAGEMENT*ROUTES********************************** */
+/*[#10]****************************************DEVICE*MANAGEMENT*ROUTES********************************** */
 
 // Add Device
 app.post("/devices", async (req, res) => {
@@ -507,7 +458,7 @@ app.post("/device/details", async (req, res) => {
     const { deviceId } = req.body;
     const device = await getDeviceDetails(deviceId);
     if (device) {
-      res.status(200).send(device);
+      res.status(200).send({device});
     } else {
       res.status(501).send({ message: "Could not get device details" });
     }
@@ -538,7 +489,7 @@ app.post("/device/data", async (req, res) => {
     const { deviceId } = req.body;
     const data = await getRecordedData(deviceId);
     if (data) {
-      res.status(200).send(data);
+      res.status(200).send({data});
     } else {
       res.status(501).send({ message: "Could not get device records" });
     }
