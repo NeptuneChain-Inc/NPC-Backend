@@ -1,4 +1,3 @@
-
 /** SERVER MODULES */
 const express = require("express");
 const { resolve } = require("path");
@@ -22,7 +21,7 @@ const {
   getRecordedData,
   getDevices,
 } = require("./apis/deviceManager");
-const {Verification} = require("./apis/neptunechain");
+const { Verification } = require("./apis/neptunechain");
 
 /** SERVER CONFIGS */
 dotenv.config({ path: "./src/.env" });
@@ -44,23 +43,39 @@ app.use(function (req, res, next) {
 });
 
 /*[#1]**********************************#WEB*ROUTES*********************************************** */
-app.get('/', (req, res) => {
-  const path = resolve('/index.html');
+app.get("/", (req, res) => {
+  const path = resolve("/index.html");
   res.sendFile(path);
 });
 
-app.get('/docs', (req, res) => {
-  const path = resolve('/docs.html');
+app.get("/docs", (req, res) => {
+  const path = resolve("/docs.html");
   res.sendFile(path);
 });
 
 /*[#2]*********************************USER*DATABASE*ROUTES******************************************* */
-// #UserDB get routes
+
+/**
+ * @api {post} /db/user/create
+ * @apiName CreateUserDatabase
+ * @apiDescription Initiate database for new user
+ * @apiGroup UserDatabase
+ *
+ * @apiParam {String} userUID - User's unique identifier from firebase authentication.
+ * @apiParam {String} email - User's email address from account registration form input.
+ * @apiParam {String} username - User's account name from registration form input.
+ * @apiParam {String} type - User's account type chosen from registration form.
+ *
+ * @apiSuccess {Object} result - Returns true if user account created
+ *
+ * @apiError {Object} error Error message.
+ */
 app.post("/db/user/create", async (req, res) => {
-  const { uid, email, username, type } = req.body;
+  const { userUID, email, username, type } = req.body;
   try {
-    const result = await database.UserDB.create.user({
-      uid,
+    const { create } = database.UserDB;
+    const result = await create.user({
+      userUID,
       email,
       username,
       type,
@@ -71,33 +86,85 @@ app.post("/db/user/create", async (req, res) => {
   }
 });
 
-app.post("/db/user/get", async (req, res) => {
+/**
+ * @api {post} /db/user/get/fuid
+ * @apiName GetUserDatabaseFromUID
+ * @apiDescription Gets user data using (from) account's unique identifier.
+ * @apiGroup UserDatabase
+ *
+ * @apiParam {String} userUID - User's unique identifier from firebase
+ *
+ * @apiSuccess {Object} userdata - Returns userdata object
+ *
+ * @apiError {Object} error Error message.
+ */
+app.post("/db/user/get/fuid", async (req, res) => {
+  const { userUID } = req.body;
   try {
-    const user = await database.UserDB.get.user(req.body.uid);
-    return res.send({ user });
-  } catch (error) {
-    return res.status(500).send({ error });
-  }
-});
-
-app.post("/db/user/get/username", async (req, res) => {
-  try {
-    const userUID = await database.UserDB.get.username(req.body.username);
-    return res.send({ userUID });
+    const { user } = database.UserDB.get;
+    const userdata = await user(userUID);
+    return res.send({ userdata });
   } catch (error) {
     return res.status(500).send({ error });
   }
 });
 
 /**
+ * @api {post} /db/user/get/fusername
+ * @apiName GetUserDatabaseFromName
+ * @apiDescription Gets user data using (from) account username. It first resolves userUID before retrieving user.
+ * @apiGroup UserDatabase
+ *
+ * @apiParam {String} username - User's account name.
+ *
+ * @apiSuccess {Object} userdata - Returns userdata object
+ *
+ * @apiError {Object} error Error message.
+ */
+app.post("/db/user/get/fusername", async (req, res) => {
+  const { username } = req.body;
+  try {
+    const { get } = database.UserDB;
+    const userdata = await get.user(get.username(username));
+    return res.send({ userdata });
+  } catch (error) {
+    return res.status(500).send({ error });
+  }
+});
+
+/**
+ * @api {post} /db/user/get/username
+ * @apiName GetUserUIDFromName
+ * @apiDescription Gets the userUID of a registered username.
+ * @apiGroup UserDatabase
+ *
+ * @apiParam {String} username - User's account name.
+ *
+ * @apiSuccess {String} userUID - Returns User's unique identifier
+ *
+ * @apiError {Object} error Error message.
+ */
+app.post("/db/user/get/username", async (req, res) => {
+  const { username } = req.body;
+  try {
+    const { get } = database.UserDB;
+    const userUID = await get.username(username);
+    return res.send({ userUID });
+  } catch (error) {
+    return res.status(500).send({ error });
+  }
+});
+
+/*******************************MEDIA******************************* */
+/**
  * @api {post} /db/user/get/media Get media  from user database
  * @apiName GetUserMedia
  * @apiGroup UserMedia
- * 
+ *
  * @apiParam {String} userUID User's Unique identifier from firebase authentication.
- * 
+ *
  * @apiSuccess {Array} user_media Array of User's media.
- * 
+ *
  * @apiError {Object} error Error message.
  */
 app.post("/db/user/get/media", async (req, res) => {
@@ -125,17 +192,19 @@ app.post("/db/user/get/streams", async (req, res) => {
  * @api {post} /db/user/get/assets Get assets submitted by user (submissions)
  * @apiName GetUserAssets
  * @apiGroup UserAssets
- * 
+ *
  * @apiParam {String} userUID User's Unique identifier from firebase authentication.
- * 
+ *
  * @apiSuccess {Array} user_assets Array of User's assets (submissions).
- * 
+ *
  * @apiError {Object} error Error message.
  */
 app.post("/db/user/get/assets", async (req, res) => {
   const { userUID } = req.body;
   try {
-    const user_assets = await database.UserDB.get.assets.get.submissions(userUID);
+    const user_assets = await database.UserDB.get.assets.get.submissions(
+      userUID
+    );
     return res.send({ user_assets });
   } catch (error) {
     return res.status(500).send({ error });
@@ -146,17 +215,19 @@ app.post("/db/user/get/assets", async (req, res) => {
  * @api {post} /db/user/get/asset/disputes Get asset disputes from user database
  * @apiName GetUserAssetDisputes
  * @apiGroup UserAssets
- * 
+ *
  * @apiParam {String} userUID User's Unique identifier from firebase authentication.
- * 
+ *
  * @apiSuccess {Array} user_disputes Array of User's asset disputes.
- * 
+ *
  * @apiError {Object} error Error message.
  */
 app.post("/db/user/get/asset/disputes", async (req, res) => {
   const { userUID } = req.body;
   try {
-    const user_disputes = await database.UserDB.get.assets.get.disputes(userUID);
+    const user_disputes = await database.UserDB.get.assets.get.disputes(
+      userUID
+    );
     return res.send({ user_disputes });
   } catch (error) {
     return res.status(500).send({ error });
@@ -167,17 +238,19 @@ app.post("/db/user/get/asset/disputes", async (req, res) => {
  * @api {post} /db/user/get/asset/approvals Get asset approvals from user database
  * @apiName GetUserAssetApprovals
  * @apiGroup UserAssets
- * 
+ *
  * @apiParam {String} userUID User's Unique identifier from firebase authentication.
- * 
+ *
  * @apiSuccess {Array} user_approvals Array of User's asset approvals.
- * 
+ *
  * @apiError {Object} error Error message.
  */
 app.post("/db/user/get/asset/approvals", async (req, res) => {
   const { userUID } = req.body;
   try {
-    const user_approvals = await database.UserDB.get.assets.get.approvals(userUID);
+    const user_approvals = await database.UserDB.get.assets.get.approvals(
+      userUID
+    );
     return res.send({ user_approvals });
   } catch (error) {
     return res.status(500).send({ error });
@@ -241,7 +314,7 @@ app.post("/db/asset/create/dispute", async (req, res) => {
 });
 
 /** Resolve Dispute
- * { solution, status } = params 
+ * { solution, status } = params
  */
 app.post("/db/asset/create/dispute/close", async (req, res) => {
   try {
@@ -313,7 +386,9 @@ app.post("/livepeer/asset/delete", async (req, res) => {
 app.post("/livepeer/asset/info/playback", async (req, res) => {
   const { playbackID } = req.body;
   try {
-    const playbackInfo = await livepeer.PlaybackOps.get.playbackInfo(playbackID);
+    const playbackInfo = await livepeer.PlaybackOps.get.playbackInfo(
+      playbackID
+    );
     return res.send({ playbackInfo });
   } catch (error) {
     return res.status(500).send({ error });
@@ -333,11 +408,8 @@ app.post("/db/media/get/stream", async (req, res) => {
 
 app.post("/db/media/create/stream", async (req, res) => {
   try {
-    const {streamData, creatorUID} = req.body;
-    const result = await database.MediaDB.set.stream(
-      streamData,
-      creatorUID
-    );
+    const { streamData, creatorUID } = req.body;
+    const result = await database.MediaDB.set.stream(streamData, creatorUID);
     return res.send({ result });
   } catch (error) {
     return res.status(500).send({ error });
@@ -458,7 +530,7 @@ app.post("/device/details", async (req, res) => {
     const { deviceId } = req.body;
     const device = await getDeviceDetails(deviceId);
     if (device) {
-      res.status(200).send({device});
+      res.status(200).send({ device });
     } else {
       res.status(501).send({ message: "Could not get device details" });
     }
@@ -489,7 +561,7 @@ app.post("/device/data", async (req, res) => {
     const { deviceId } = req.body;
     const data = await getRecordedData(deviceId);
     if (data) {
-      res.status(200).send({data});
+      res.status(200).send({ data });
     } else {
       res.status(501).send({ message: "Could not get device records" });
     }

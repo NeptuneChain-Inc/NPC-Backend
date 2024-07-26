@@ -51,12 +51,13 @@ const _loadDefaultTemplate = async (uid, accountType) => {
 /*******GETTERS********************GETTERS*******************GETTERS******************** */
 
 /** #GET_PUBLIC_DATA */
-const getUsername = async (username) =>
-  await getUser(
-    await _getData(
-      `neptunechain/users/usernames/${sanitizeUserInput(username)}`
-    )
-  );
+const getUser = async (uid) => await _getData(`neptunechain/users/data/${uid}`);
+
+const getUserUIDFromName = async (username) =>
+  await _getData(`neptunechain/users/usernames/${sanitizeUserInput(username)}`);
+
+const getUserFromName = async (username) =>
+  await getUser(await getUserUIDFromName(username));
 
 const getMedia = async (assetId) =>
   await _getData(`neptunechain/livepeer/media/${assetId}`);
@@ -65,8 +66,6 @@ const getStream = async (playbackId) =>
   await _getData(`neptunechain/livepeer/streams/${playbackId}`);
 
 /** #GET_USER_DATA */
-
-const getUser = async (uid) => await _getData(`neptunechain/users/data/${uid}`);
 
 const getUserDashboard = async (uid) =>
   await _getData(`neptunechain/users/data/${uid}/dashboard/`);
@@ -92,7 +91,8 @@ const getUserSubmissions = async (uid) =>
 const getUserDisputes = async (uid) =>
   _getCollection(`neptunechain/users/data/${uid}/assets/disputes`);
 
-const getUserClosedDisputes = async (uid) => _getCollection(`neptunechain/users/data/${uid}/assets/disputes/closed`);
+const getUserClosedDisputes = async (uid) =>
+  _getCollection(`neptunechain/users/data/${uid}/assets/disputes/closed`);
 
 const getUserApprovals = async (uid) =>
   _getCollection(`neptunechain/users/data/${uid}/assets/approvals`);
@@ -119,7 +119,11 @@ const createUser = async (userData) => {
       throw new Error("Missing required fields");
     }
 
-    if (await _getData(`neptunechain/users/data/${uid}`)) {
+    if (await getUserUIDFromName(username)) {
+      throw new Error("Username already exists");
+    }
+
+    if (await getUser(uid)) {
       throw new Error("User already exists");
     }
 
@@ -219,7 +223,7 @@ const AddUserSubmission = async (uid, assetID, txHash) => {
   try {
     return await _pushData(
       `neptunechain/users/data/${uid}/assets/submissions`,
-      {assetID, txHash}
+      { assetID, txHash }
     );
   } catch (error) {
     throw error;
@@ -228,10 +232,10 @@ const AddUserSubmission = async (uid, assetID, txHash) => {
 
 const AddUserDispute = async (uid, assetID, txHash) => {
   try {
-    return await _pushData(
-      `neptunechain/users/data/${uid}/assets/disputes`,
-      {assetID, txHash}
-    );
+    return await _pushData(`neptunechain/users/data/${uid}/assets/disputes`, {
+      assetID,
+      txHash,
+    });
   } catch (error) {
     throw error;
   }
@@ -241,7 +245,7 @@ const AddUserClosedDispute = async (uid, disputeID, txHash) => {
   try {
     return await _pushData(
       `neptunechain/users/data/${uid}/assets/disputes/closed`,
-      {disputeID, txHash}
+      { disputeID, txHash }
     );
   } catch (error) {
     throw error;
@@ -250,10 +254,10 @@ const AddUserClosedDispute = async (uid, disputeID, txHash) => {
 
 const AddUserApproval = async (uid, assetID, txHash) => {
   try {
-    return await _pushData(
-      `neptunechain/users/data/${uid}/assets/approvals`,
-      {assetID, txHash}
-    );
+    return await _pushData(`neptunechain/users/data/${uid}/assets/approvals`, {
+      assetID,
+      txHash,
+    });
   } catch (error) {
     throw error;
   }
@@ -287,7 +291,7 @@ const setMediaMetadata = async (assetID, metadata) => {
 const UserDB = {
   get: {
     user: getUser,
-    username: getUsername,
+    username: getUserFromName,
     dashboard: getUserDashboard,
     media: {
       media: getUserMedia,
