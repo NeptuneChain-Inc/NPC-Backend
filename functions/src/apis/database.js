@@ -100,7 +100,36 @@ const getUserApprovals = async (uid) =>
 const getUserStreams = async (uid) =>
   _getCollection(`neptunechain/users/data/${uid}/streams/`);
 
-/**************************************************************************************** */
+/************************************USER REGISTRATION*************************************** */
+const { generateWallet } = require('./walletUtils'); // Import generateWallet function
+
+/**
+ * Adds a user to the verification queue in the database.
+ * @param {string} uid - The unique identifier of the user to add to the verification queue.
+ */
+const addToVerificationQueue = async (uid) => {
+  try {
+    await _saveData(`neptunechain/verification/queue/${uid}`, { uid });
+    console.log(`User UID ${uid} added to verification queue.`);
+  } catch (e) {
+    console.error(`Error adding user UID ${uid} to verification queue: ${e}`);
+    throw e;
+  }
+};
+
+/**
+ * Removes a user from the verification queue in the database.
+ * @param {string} uid - The unique identifier of the user to remove from the verification queue.
+ */
+const removeFromVerificationQueue = async (uid) => {
+  try {
+    await _saveData(`neptunechain/verification/queue/${uid}`, null);
+    console.log(`User UID ${uid} removed from verification queue.`);
+  } catch (e) {
+    console.error(`Error removing user UID ${uid} from verification queue: ${e}`);
+    throw e;
+  }
+};
 
 /**
  * Creates a new user with the provided user data.
@@ -108,14 +137,15 @@ const getUserStreams = async (uid) =>
  * @param {Object} userData - The user data object.
  * @param {string} userData.uid - The unique identifier for the user.
  * @param {string} userData.username - The username for the user.
- * @param {string} userData.type - The type of the user.
+ * @param {string} userData.role - The role of the user.
+ * @param {number} userData.PIN 6-figure access pin for wallet access
  * @throws {Error} - Throws an error if any required fields are missing or if the user already exists.
  */
 const createUser = async (userData) => {
   try {
-    const { uid, username, type } = userData || {};
+    const { uid, username, role, PIN } = userData || {};
 
-    if (!uid || !username || !type) {
+    if (!uid || !username || !role) {
       throw new Error("Missing required fields");
     }
 
@@ -127,14 +157,21 @@ const createUser = async (userData) => {
       throw new Error("User already exists");
     }
 
+    const encryptedKey = await generateWallet(uid, PIN);
+    userData.walletKey = encryptedKey;
+
+    // Save user data
     await _saveData(`neptunechain/users/data/${uid}`, userData);
     await _saveData(
-      `neptunechain/users/usernames/${sanitizeUserInput(
-        username
-      ).toLowerCase()}`,
+      `neptunechain/users/usernames/${sanitizeUserInput(username).toLowerCase()}`,
       uid
     );
-    await _loadDefaultTemplate(uid, type);
+
+    // Handle role-based verification
+    if (role === 'farmer' || role === 'verifier') {
+      await addToVerificationQueue(uid);
+    }
+
     console.log(`User created: ${uid}`);
     return true;
   } catch (e) {
@@ -143,6 +180,7 @@ const createUser = async (userData) => {
   }
 };
 
+/***************************************************************** */
 /**
  * Saves a stream data to the database and associates it with a creator.
  *

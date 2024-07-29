@@ -64,21 +64,23 @@ app.get("/docs", (req, res) => {
  * @apiParam {String} userUID - User's unique identifier from firebase authentication.
  * @apiParam {String} email - User's email address from account registration form input.
  * @apiParam {String} username - User's account name from registration form input.
- * @apiParam {String} type - User's account type chosen from registration form.
+ * @apiParam {String} role - User's account role chosen from registration form.
+ * @apiparam {number} PIN 6-figure access pin for wallet access
  *
  * @apiSuccess {Object} result - Returns true if user account created
  *
  * @apiError {Object} error Error message.
  */
 app.post("/db/user/create", async (req, res) => {
-  const { userUID, email, username, type } = req.body;
+  const { userUID, email, username, role, PIN } = req.body;
   try {
     const { create } = database.UserDB;
     const result = await create.user({
       userUID,
       email,
       username,
-      type,
+      role,
+      PIN
     });
     return res.send({ result });
   } catch (error) {
