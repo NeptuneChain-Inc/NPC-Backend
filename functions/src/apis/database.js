@@ -101,7 +101,7 @@ const getUserStreams = async (uid) =>
   _getCollection(`neptunechain/users/data/${uid}/streams/`);
 
 /************************************USER REGISTRATION*************************************** */
-const { generateWallet } = require('./walletUtils'); // Import generateWallet function
+const { generateWallet } = require("./walletUtils"); // Import generateWallet function
 
 /**
  * Adds a user to the verification queue in the database.
@@ -118,6 +118,21 @@ const addToVerificationQueue = async (uid) => {
 };
 
 /**
+ * Checks if user is in the verification queue in the database.
+ * @param {string} uid - The unique identifier of the user to check.
+ */
+const inVerificationQueue = async (uid) => {
+  try {
+    if (await _getData(`neptunechain/verification/queue/${uid}`)) {
+      return true;
+    }
+    return false;
+  } catch (e) {
+    throw e;
+  }
+};
+
+/**
  * Removes a user from the verification queue in the database.
  * @param {string} uid - The unique identifier of the user to remove from the verification queue.
  */
@@ -126,7 +141,9 @@ const removeFromVerificationQueue = async (uid) => {
     await _saveData(`neptunechain/verification/queue/${uid}`, null);
     console.log(`User UID ${uid} removed from verification queue.`);
   } catch (e) {
-    console.error(`Error removing user UID ${uid} from verification queue: ${e}`);
+    console.error(
+      `Error removing user UID ${uid} from verification queue: ${e}`
+    );
     throw e;
   }
 };
@@ -163,12 +180,14 @@ const createUser = async (userData) => {
     // Save user data
     await _saveData(`neptunechain/users/data/${uid}`, userData);
     await _saveData(
-      `neptunechain/users/usernames/${sanitizeUserInput(username).toLowerCase()}`,
+      `neptunechain/users/usernames/${sanitizeUserInput(
+        username
+      ).toLowerCase()}`,
       uid
     );
 
     // Handle role-based verification
-    if (role === 'farmer' || role === 'verifier') {
+    if (role === "farmer" || role === "verifier") {
       await addToVerificationQueue(uid);
     }
 
@@ -334,6 +353,11 @@ const UserDB = {
     media: {
       media: getUserMedia,
       streams: getUserStreams,
+    },
+    accountVerification: {
+      add: addToVerificationQueue,
+      inQueue: inVerificationQueue,
+      remove: removeFromVerificationQueue,
     },
     assets: {
       add: {

@@ -1,0 +1,8 @@
+<!-- * Implemengt Account Register Function to registered email verified and/or role verified account to be registed on the blockchain for full access (extracts txAddress from encryptedKey)
+  Subtasks:
+  - create js ABI for Account Manager (Account Registration) *Done
+  - create js interactions for Account Manager (Account Registration) *Done
+  - Implement Account Manager Functions into neptuneChain API functions (neptunechain.js) * Done
+  - Add endpoint to access and use Account Registration * Done -->
+  
+* TEST UPDATES, UPDATE HTML DOCS
