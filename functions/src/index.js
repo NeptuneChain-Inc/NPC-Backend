@@ -29,7 +29,16 @@ dotenv.config({ path: "./src/.env" });
 
 const app = express();
 
-app.use(cors());
+/** Cors Setup */
+const corsOptions = {
+  origin: 'https://app.neptunechain.io', // Replace with your frontend's domain
+  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+  credentials: true, // Allow cookies to be sent
+  optionsSuccessStatus: 204
+};
+
+app.use(cors(corsOptions));
+
 app.use(express.json());
 app.use(express.static("./public"));
 app.use(bodyParser.json());
