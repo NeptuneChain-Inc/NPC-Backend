@@ -308,6 +308,18 @@ app.post("/db/user/get/media", async (req, res) => {
   }
 });
 
+/**
+ * @api {post} /db/user/get/streams
+ * @apiName GetUserStreams
+ * @apiDescription Get streams from user database
+ * @apiGroup UserMedia
+ *
+ * @apiParam {String} userUID - User's unique identifier from firebase authentication.
+ *
+ * @apiSuccess {Array} user_streams - Array of User's streams.
+ *
+ * @apiError {Object} error - Error message.
+ */
 app.post("/db/user/get/streams", async (req, res) => {
   try {
     const { userUID } = req.body;
@@ -389,18 +401,41 @@ app.post("/db/user/get/asset/approvals", async (req, res) => {
 });
 
 /*[#4]**********************DATABASE*ASSET*CREATION********************** */
-// Get Asset
+/**
+ * @api {post} /db/asset/get
+ * @apiName GetAsset
+ * @apiDescription Get Asset
+ * @apiGroup AssetManagement
+ *
+ * @apiParam {String} assetID - Asset's unique identifier.
+ *
+ * @apiSuccess {Object} dbAsset - Returns Database Asset object
+ *
+ * @apiError {Object} error - Error message.
+ */
 app.post("/db/asset/get", async (req, res) => {
   try {
     const { assetID } = req.body;
-    const media = await database.MediaDB.get.media(assetID);
-    return res.send({ media });
+    const dbAsset = await database.MediaDB.get.media(assetID);
+    return res.send({ dbAsset });
   } catch (error) {
     return res.status(500).send({ error });
   }
 });
 
-// Create/Upload Asset
+/**
+ * @api {post} /db/asset/create
+ * @apiName CreateAsset
+ * @apiDescription Create/Upload Asset
+ * @apiGroup AssetManagement
+ *
+ * @apiParam {Object} newAssetPayload - New asset payload data.
+ * @apiParam {String} userUID - User's unique identifier.
+ *
+ * @apiSuccess {Object} result - Returns result of asset creation
+ *
+ * @apiError {Object} error - Error message.
+ */
 app.post("/db/asset/create", async (req, res) => {
   try {
     const { newAssetPaylaod, userUID } = req.body;
@@ -411,7 +446,19 @@ app.post("/db/asset/create", async (req, res) => {
   }
 });
 
-// Ammend metadata to asset
+/**
+ * @api {post} /db/asset/create/metadata
+ * @apiName AddAssetMetadata
+ * @apiDescription Amend metadata to asset
+ * @apiGroup AssetManagement
+ *
+ * @apiParam {String} assetID - Asset's unique identifier.
+ * @apiParam {Object} metadata - Metadata to add to asset.
+ *
+ * @apiSuccess {Object} result - Returns result of metadata addition
+ *
+ * @apiError {Object} error - Error message.
+ */
 app.post("/db/asset/create/metadata", async (req, res) => {
   try {
     const { assetID, metadata } = req.body;
@@ -422,7 +469,19 @@ app.post("/db/asset/create/metadata", async (req, res) => {
   }
 });
 
-// Submit asset
+/**
+ * @api {post} /db/asset/create/submit
+ * @apiName SubmitAsset
+ * @apiDescription Submit Asset for review and approval
+ * @apiGroup AssetManagement
+ *
+ * @apiParam {String} userUID User's Unique identifier.
+ * @apiParam {String} assetID - Asset's unique identifier.
+ *
+ * @apiSuccess {Object} result - Returns result of asset submission
+ *
+ * @apiError {Object} error - Error message.
+ */
 app.post("/db/asset/create/submit", async (req, res) => {
   try {
     const { userUID, assetID } = req.body;
@@ -433,7 +492,20 @@ app.post("/db/asset/create/submit", async (req, res) => {
   }
 });
 
-// Dispute Asset
+/**
+ * @api {post} /db/asset/create/dispute
+ * @apiName DisputeAsset
+ * @apiDescription Dispute Asset
+ * @apiGroup AssetManagement
+ *
+ * @apiParam {String} userUID User's Unique identifier.
+ * @apiParam {String} assetID - Asset's unique identifier.
+ * @apiParam {String} reason - Reason for dispute.
+ *
+ * @apiSuccess {Object} result - Returns result of asset dispute
+ *
+ * @apiError {Object} error - Error message.
+ */
 app.post("/db/asset/create/dispute", async (req, res) => {
   try {
     const { userUID, assetID, reason } = req.body;
@@ -444,21 +516,47 @@ app.post("/db/asset/create/dispute", async (req, res) => {
   }
 });
 
-/** Resolve Dispute
- * { solution, status } = params
+/**
+ * @api {post} /db/asset/create/dispute/close
+ * @apiName CloseAssetDispute
+ * @apiDescription Close Asset Dispute
+ * @apiGroup AssetManagement
+ *
+ * @apiParam {String} userUID User's Unique identifier.
+ * @apiParam {String} disputeID - Dispute's unique identifier.
+ * @apiParam {String} solution - A short summary of solution
+ * @apiParam {String} status - One-word status of close (i.e resolved, invalid, cancelled, etc)
+ *
+ * @apiSuccess {Object} result - Returns result of closing asset dispute
+ *
+ * @apiError {Object} error - Error message.
  */
 app.post("/db/asset/create/dispute/close", async (req, res) => {
   try {
-    const { userUID, disputeID, params } = req.body;
-    const result = await Verification.resolveAsset(userUID, disputeID, params);
+    const { userUID, disputeID, solution, status } = req.body;
+    const result = await Verification.resolveAsset(userUID, disputeID, {
+      solution,
+      status,
+    });
     return res.send({ result });
   } catch (error) {
     return res.status(500).send({ error });
   }
 });
 
-/** Approve Asset
- * { creditTypes, creditSupplyLimits } = params
+/**
+ * @api {post} /db/asset/create/approve
+ * @apiName ApproveAsset
+ * @apiDescription Approve Asset
+ * @apiGroup AssetManagement
+ *
+ * @apiParam {String} assetID - Asset's unique identifier.
+ * @apiParam {Array<String>} creditTypes - An array of credit types the asset is allowed to issue
+ * @apiParam {Array<Number>} creditSupplyLimits - A corresponding array of credit limits to limit the amount of credit issued per credit type
+ *
+ * @apiSuccess {Object} result - Returns result of asset approval
+ *
+ * @apiError {Object} error - Error message.
  */
 app.post("/db/asset/create/approve", async (req, res) => {
   try {
@@ -472,7 +570,16 @@ app.post("/db/asset/create/approve", async (req, res) => {
 
 /*[#5]**********************************#LIVEPEER*ROUTES******************************************* */
 
-/** Livepeer Proxy */
+/**
+ * @api {post} /livepeer_origin
+ * @apiName LivepeerOrigin
+ * @apiDescription Get Livepeer origin details
+ * @apiGroup Livepeer
+ *
+ * @apiSuccess {Object} origin - Returns Livepeer origin details
+ *
+ * @apiError {Object} error - Error message.
+ */
 app.use(
   "/livepeer_origin",
   createProxyMiddleware({
@@ -484,6 +591,18 @@ app.use(
   })
 );
 
+/**
+ * @api {post} /livepeer/asset/get
+ * @apiName GetLivepeerAsset
+ * @apiDescription Get Livepeer Asset
+ * @apiGroup Livepeer
+ *
+ * @apiParam {String} assetID - Asset's unique identifier.
+ *
+ * @apiSuccess {Object} asset - Returns Livepeer asset details
+ *
+ * @apiError {Object} error - Error message.
+ */
 app.post("/livepeer/asset/get", async (req, res) => {
   const { assetID } = req.body;
   try {
@@ -494,6 +613,19 @@ app.post("/livepeer/asset/get", async (req, res) => {
   }
 });
 
+/**
+ * @api {post} /livepeer/asset/update
+ * @apiName UpdateLivepeerAsset
+ * @apiDescription Update Livepeer Asset
+ * @apiGroup Livepeer
+ *
+ * @apiParam {String} assetID - Asset's unique identifier.
+ * @apiParam {Object} updateData - Data to update in asset.
+ *
+ * @apiSuccess {Object} result - Returns result of asset update
+ *
+ * @apiError {Object} error - Error message.
+ */
 app.post("/livepeer/asset/update", async (req, res) => {
   const { assetID, patch } = req.body;
   try {
@@ -504,6 +636,18 @@ app.post("/livepeer/asset/update", async (req, res) => {
   }
 });
 
+/**
+ * @api {post} /livepeer/asset/delete
+ * @apiName DeleteLivepeerAsset
+ * @apiDescription Delete Livepeer Asset
+ * @apiGroup Livepeer
+ *
+ * @apiParam {String} assetID - Asset's unique identifier.
+ *
+ * @apiSuccess {Object} result - Returns result of asset deletion
+ *
+ * @apiError {Object} error - Error message.
+ */
 app.post("/livepeer/asset/delete", async (req, res) => {
   const { assetID } = req.body;
   try {
@@ -514,6 +658,18 @@ app.post("/livepeer/asset/delete", async (req, res) => {
   }
 });
 
+/**
+ * @api {post} /livepeer/asset/info/playback
+ * @apiName GetLivepeerAssetPlaybackInfo
+ * @apiDescription Get Livepeer Asset Playback Info
+ * @apiGroup Livepeer
+ *
+ * @apiParam {String} playbackID - Asset's unique identifier for playback.
+ *
+ * @apiSuccess {Object} playbackInfo - Returns playback info of asset
+ *
+ * @apiError {Object} error - Error message.
+ */
 app.post("/livepeer/asset/info/playback", async (req, res) => {
   const { playbackID } = req.body;
   try {
@@ -527,6 +683,18 @@ app.post("/livepeer/asset/info/playback", async (req, res) => {
 });
 
 /*[#6]*************************STREAM**MANAGEMENT************************************************** */
+/**
+ * @api {post} /db/media/get/stream
+ * @apiName GetMediaStream
+ * @apiDescription Get Media Stream
+ * @apiGroup Media
+ *
+ * @apiParam {String} streamID - Stream's unique identifier.
+ *
+ * @apiSuccess {Object} stream - Returns media stream
+ *
+ * @apiError {Object} error - Error message.
+ */
 app.post("/db/media/get/stream", async (req, res) => {
   try {
     const { assetID } = req.body;
@@ -537,10 +705,23 @@ app.post("/db/media/get/stream", async (req, res) => {
   }
 });
 
+/**
+ * @api {post} /db/media/create/stream
+ * @apiName CreateMediaStream
+ * @apiDescription Create Media Stream
+ * @apiGroup Media
+ *
+ * @apiParam {String} userUID - User's unique identifier.
+ * @apiParam {Object} streamData - Data for the new stream.
+ *
+ * @apiSuccess {Object} result - Returns result of stream creation
+ *
+ * @apiError {Object} error - Error message.
+ */
 app.post("/db/media/create/stream", async (req, res) => {
   try {
-    const { streamData, creatorUID } = req.body;
-    const result = await database.MediaDB.set.stream(streamData, creatorUID);
+    const { userUID, streamData } = req.body;
+    const result = await database.MediaDB.set.stream(streamData, userUID);
     return res.send({ result });
   } catch (error) {
     return res.status(500).send({ error });
@@ -548,6 +729,16 @@ app.post("/db/media/create/stream", async (req, res) => {
 });
 
 /*[#7]**********************************#MAPS*ROUTES*********************************************** */
+/**
+ * @api {get} /maps/get/api
+ * @apiName GetMapsAPI
+ * @apiDescription Get Maps API
+ * @apiGroup Maps
+ *
+ * @apiSuccess {String} api - Returns Maps API
+ *
+ * @apiError {Object} error - Error message.
+ */
 app.post("/maps/get/api", async (req, res) => {
   try {
     const api = await maps.getMapsAPI();
@@ -558,6 +749,18 @@ app.post("/maps/get/api", async (req, res) => {
 });
 
 /*[#8]**********************************#MORALIS*ROUTES******************************************** */
+/**
+ * @api {post} /moralis/get/wallet_nfts
+ * @apiName GetWalletNFTs
+ * @apiDescription Get Wallet NFTs
+ * @apiGroup Moralis
+ *
+ * @apiParam {String} address - Wallet address to get NFTs for.
+ *
+ * @apiSuccess {Array} wallet_nfts - Returns array of NFTs in Wallet Address
+ *
+ * @apiError {Object} error - Error message.
+ */
 app.post("/moralis/get/wallet_nfts", async (req, res) => {
   try {
     const { address } = req.body || {};
@@ -568,6 +771,19 @@ app.post("/moralis/get/wallet_nfts", async (req, res) => {
   }
 });
 
+/**
+ * @api {post} /moralis/get/nft_metadata
+ * @apiName GetNFTMetadata
+ * @apiDescription Get NFT Metadata
+ * @apiGroup Moralis
+ *
+ * @apiParam {String} tokenId - Token ID of the NFT.
+ * @apiParam {String} address - Contract address of the NFT.
+ *
+ * @apiSuccess {Object} nft_metadata - Returns NFT metadata
+ *
+ * @apiError {Object} error - Error message.
+ */
 app.post("/moralis/get/nft_metadata", async (req, res) => {
   try {
     const { address, tokenId } = req.body || {};
@@ -579,24 +795,60 @@ app.post("/moralis/get/nft_metadata", async (req, res) => {
 });
 
 /*[#9]**********************************#STIPE*ROUTES******************************************* */
+/**
+ * @api {get} /stripe/config
+ * @apiName GetStripeConfig
+ * @apiDescription Get Stripe Configuration
+ * @apiGroup Stripe
+ *
+ * @apiSuccess {Object} result - Result object with publishableKey.
+ * @apiError {Object} error - Error message.
+ */
 app.post("/stripe/config", (req, res) => {
   return res.send({
     publishableKey: process.env.STRIPE_PUBLISHABLE_KEY,
   });
 });
 
+/**
+ * @api {post} /stripe/create/payment_intent
+ * @apiName CreatePaymentIntent
+ * @apiDescription Create Payment Intent
+ * @apiGroup Stripe
+ *
+ * @apiParam {String} amount - Amount to charge.
+ * @apiParam {String} currency - Currency of the charge.
+ *
+ * @apiSuccess {Object} payment_intent - Returns payment intent details
+ *
+ * @apiError {Object} error - Error message.
+ */
 app.post("/stripe/create/payment_intent", async (req, res) => {
+  const { amount, currency } = req.body;
   try {
-    const payment_intent = await stripe.createPaymentIntent(req.body);
+    const payment_intent = await stripe.createPaymentIntent(amount, currency);
     return res.send({ payment_intent });
   } catch (error) {
     return res.status(500).send({ error });
   }
 });
 
+/**
+ * @api {get} /stripe/get/price
+ * @apiName GetStripePrice
+ * @apiDescription Get Stripe Price
+ * @apiGroup Stripe
+ *
+ * @apiParam {String} priceID - Price ID to retrieve.
+ *
+ * @apiSuccess {Object} price - Returns price details
+ *
+ * @apiError {Object} error - Error message.
+ */
 app.post("/stripe/get/price", async (req, res) => {
+  const { priceID } = req.body;
   try {
-    const price = await stripe.getPrice(req.body);
+    const price = await stripe.getPrice(priceID);
     return res.send({ price });
   } catch (error) {
     return res.status(500).send({ error });
@@ -604,7 +856,16 @@ app.post("/stripe/get/price", async (req, res) => {
 });
 /*[#10]****************************************DEVICE*MANAGEMENT*ROUTES********************************** */
 
-// Add Device
+/**
+ * @api {get} /devices
+ * @apiName GetDevices
+ * @apiDescription Get list of devices
+ * @apiGroup DeviceManagement
+ *
+ * @apiSuccess {Array} devices - Returns list of devices
+ *
+ * @apiError {Object} error - Error message.
+ */
 app.post("/devices", async (req, res) => {
   try {
     const devices = await getDevices();
@@ -614,10 +875,22 @@ app.post("/devices", async (req, res) => {
   }
 });
 
-// Add Device
+/**
+ * @api {post} /device
+ * @apiName AddDevice
+ * @apiDescription Add a specific device
+ * @apiGroup DeviceManagement
+ *
+ * @apiParam {Object} devicePayload - New Device Payload.
+ *
+ * @apiSuccess {String} message - Operation Status
+ *
+ * @apiError {Object} error - Error message.
+ */
 app.post("/device", async (req, res) => {
+  const { devicePayload } = req.body;
   try {
-    if (await addDevice(req.body)) {
+    if (await addDevice(devicePayload)) {
       res.status(201).send({ message: "Device added successfully" });
     } else {
       res.status(501).send({ message: "Could not add device" });
@@ -627,11 +900,23 @@ app.post("/device", async (req, res) => {
   }
 });
 
-// Edit Device
+/**
+ * @api {post} /device/edit
+ * @apiName EditDevice
+ * @apiDescription Edit a specific device
+ * @apiGroup DeviceManagement
+ *
+ * @apiParam {String} deviceID - Device's unique identifier.
+ * @apiParam {Object} updateData - Data to update in device.
+ *
+ * @apiSuccess {String} message - Operation Status
+ *
+ * @apiError {Object} error - Error message.
+ */
 app.post("/device/edit", async (req, res) => {
   try {
-    const { deviceId, update } = req.body;
-    if (await editDevice(deviceId, update)) {
+    const { deviceID, updateData } = req.body;
+    if (await editDevice(deviceID, updateData)) {
       res.status(200).send({ message: "Device updated successfully" });
     } else {
       res.status(501).send({ message: "Could not update device" });
@@ -641,11 +926,22 @@ app.post("/device/edit", async (req, res) => {
   }
 });
 
-// Remove Device
+/**
+ * @api {post} /device/remove
+ * @apiName RemoveDevice
+ * @apiDescription Remove a specific device
+ * @apiGroup DeviceManagement
+ *
+ * @apiParam {String} deviceID - Device's unique identifier.
+ *
+ * @apiSuccess {String} message - Operation Status
+ *
+ * @apiError {Object} error - Error message.
+ */
 app.post("/device/remove", async (req, res) => {
   try {
-    const { deviceId } = req.body;
-    if (await removeDevice(deviceId)) {
+    const { deviceID } = req.body;
+    if (await removeDevice(deviceID)) {
       res.status(200).send({ message: "Device removed successfully" });
     } else {
       res.status(501).send({ message: "Could not remove device" });
@@ -655,11 +951,22 @@ app.post("/device/remove", async (req, res) => {
   }
 });
 
-// Get Device Details
+/**
+ * @api {get} /device/details
+ * @apiName GetDeviceDetails
+ * @apiDescription Get details of a specific device
+ * @apiGroup DeviceManagement
+ *
+ * @apiParam {String} deviceID - Device's unique identifier.
+ *
+ * @apiSuccess {Object} device - Returns device details
+ *
+ * @apiError {Object} error - Error message.
+ */
 app.post("/device/details", async (req, res) => {
   try {
-    const { deviceId } = req.body;
-    const device = await getDeviceDetails(deviceId);
+    const { deviceID } = req.body;
+    const device = await getDeviceDetails(deviceID);
     if (device) {
       res.status(200).send({ device });
     } else {
@@ -670,14 +977,26 @@ app.post("/device/details", async (req, res) => {
   }
 });
 
-// Emulate Device Function
+/**
+ * @api {post} /device/emulate
+ * @apiName EmulateDevice
+ * @apiDescription Emulate a specific device
+ * @apiGroup DeviceManagement
+ *
+ * @apiParam {String} deviceID - Device's unique identifier.
+ * @apiParam {Number} interval - Intervals to rerun emulation (milliseconds)
+ *
+ * @apiSuccess {String} message - Operation Status
+ *
+ * @apiError {Object} error - Error message.
+ */
 app.post("/device/emulate", async (req, res) => {
   try {
-    const { deviceId, interval } = req.body;
-    if (await emulateDeviceFunction(deviceId, interval)) {
+    const { deviceID, interval } = req.body;
+    if (await emulateDeviceFunction(deviceID, interval)) {
       res
         .status(200)
-        .send({ message: `Emulation started for device ${deviceId}` });
+        .send({ message: `Emulation started for device ${deviceID}` });
     } else {
       res.status(501).send({ message: "Could not emulate device" });
     }
@@ -686,11 +1005,22 @@ app.post("/device/emulate", async (req, res) => {
   }
 });
 
-// Get Recorded Data
+/**
+ * @api {get} /device/data
+ * @apiName GetDeviceData
+ * @apiDescription Get data of a specific device
+ * @apiGroup DeviceManagement
+ *
+ * @apiParam {String} deviceID - Device's unique identifier.
+ *
+ * @apiSuccess {Object} data - Returns device data
+ *
+ * @apiError {Object} error - Error message.
+ */
 app.post("/device/data", async (req, res) => {
   try {
-    const { deviceId } = req.body;
-    const data = await getRecordedData(deviceId);
+    const { deviceID } = req.body;
+    const data = await getRecordedData(deviceID);
     if (data) {
       res.status(200).send({ data });
     } else {

@@ -101,7 +101,7 @@ const getUserStreams = async (uid) =>
   _getCollection(`neptunechain/users/data/${uid}/streams/`);
 
 /************************************USER REGISTRATION*************************************** */
-const { generateWallet } = require("./walletUtils"); // Import generateWallet function
+const { generateWallet } = require("./ethereum");
 
 /**
  * Adds a user to the verification queue in the database.

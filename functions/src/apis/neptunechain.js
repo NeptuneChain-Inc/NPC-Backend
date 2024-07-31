@@ -1,7 +1,7 @@
 const { getSigner } = require("./ethereum");
 const {
   getAccountManagerInteractions,
-} = require("../smart_contracts/interactions/account_manager");
+} = require("../smart_contracts/interactions/accountManager");
 const {
   getVerificationInteractions,
 } = require("../smart_contracts/interactions/verification");

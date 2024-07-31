@@ -5,15 +5,13 @@ const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY, {
 /**
  * Creates a payment intent using the Stripe API.
  *
- * @param {Object} request_body - The request body containing the currency and amount.
- * @param {string} request_body.currency - The currency code (default: "USD").
- * @param {number} request_body.amount - The amount to be charged.
+ * @param {string} currency - The currency code (default: "USD").
+ * @param {number} amount - The amount to be charged.
  * @returns {Object} - The payment intent client secret.
  * @throws {Error} - If there is an error creating the payment intent.
  */
-const createPaymentIntent = async (request_body) => {
+const createPaymentIntent = async (amount, currency = "USD") => {
   try {
-    const { currency = "USD", amount } = request_body || {};
     const paymentIntent = await stripe.paymentIntents.create({
       currency,
       amount,
@@ -29,7 +27,7 @@ const createPaymentIntent = async (request_body) => {
   }
 };
 
-const getPrice = async (params) => await stripe.prices.retrieve(params.priceID) || null;
+const getPrice = async (priceID) => await stripe.prices.retrieve(priceID) || null;
 
 module.exports = {
     createPaymentIntent,
