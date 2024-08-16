@@ -10,13 +10,13 @@ const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY, {
  * @returns {Object} - The payment intent client secret.
  * @throws {Error} - If there is an error creating the payment intent.
  */
-const createPaymentIntent = async (amount, currency = "USD") => {
+const createPaymentIntent = async (amount, currency = "usd", optional_params = {}) => {
   try {
     const paymentIntent = await stripe.paymentIntents.create({
-      currency,
+      currency: currency?.toLowerCase(),
       amount,
       automatic_payment_methods: { enabled: true },
-      ...request_body
+      ...optional_params
     });
 
     return {

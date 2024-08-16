@@ -29,28 +29,45 @@ dotenv.config({ path: "./src/.env" });
 
 const app = express();
 
-/** Cors Setup */
+// Set COOP and COEP headers
+// app.use((req, res, next) => {
+//   res.setHeader('Cross-Origin-Opener-Policy', 'same-origin'); // Or 'unsafe-none' if needed
+//   res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp'); // Or 'unsafe-none' if needed
+//   next();
+// });
+
+
+// Configure CORS
 const corsOptions = {
-  origin: 'https://app.neptunechain.io', // Replace with your frontend's domain
-  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-  credentials: true, // Allow cookies to be sent
-  optionsSuccessStatus: 204
+  origin: ['https://nutrient.trading'],
+  methods: 'GET,POST,PUT,DELETE,OPTIONS',
+  allowedHeaders: 'Content-Type,Authorization',
+  credentials: true 
 };
 
 app.use(cors(corsOptions));
+
+// Ensure that preflight (OPTIONS) requests are handled with a 200 response
+app.options('*', (req, res) => {
+  res.setHeader('Access-Control-Allow-Origin', 'https://nutrient.trading');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.status(200).send();
+});
 
 app.use(express.json());
 app.use(express.static("./public"));
 app.use(bodyParser.json());
 
-app.use(function (req, res, next) {
-  res.header("Access-Control-Allow-Origin", "http://app.neptunechain.io");
-  res.header(
-    "Access-Control-Allow-Headers",
-    "Origin, X-Requested-With, Content-Type, Accept"
-  );
-  next();
-});
+// app.use(function (req, res, next) {
+//   res.header("Access-Control-Allow-Origin", "https://app.neptunechain.io");
+//   res.header(
+//     "Access-Control-Allow-Headers",
+//     "Origin, X-Requested-With, Content-Type, Accept"
+//   );
+//   next();
+// });
 
 /*[#1]**********************************#WEB*ROUTES*********************************************** */
 app.get("/", (req, res) => {
@@ -803,6 +820,11 @@ app.post("/moralis/get/nft_metadata", async (req, res) => {
   }
 });
 
+/***************************************#NPC_CREDIT_CONTRACT************************************ */
+const neptuneChainCreditsRoutes = require("./routes/npcCreditsRoutes");
+
+app.use("/npc_credits", neptuneChainCreditsRoutes);
+
 /*[#9]**********************************#STIPE*ROUTES******************************************* */
 /**
  * @api {get} /stripe/config
@@ -833,9 +855,9 @@ app.post("/stripe/config", (req, res) => {
  * @apiError {Object} error - Error message.
  */
 app.post("/stripe/create/payment_intent", async (req, res) => {
-  const { amount, currency } = req.body;
+  const { amount, currency, optional_params } = req.body;
   try {
-    const payment_intent = await stripe.createPaymentIntent(amount, currency);
+    const payment_intent = await stripe.createPaymentIntent(amount, currency, optional_params);
     return res.send({ payment_intent });
   } catch (error) {
     return res.status(500).send({ error });

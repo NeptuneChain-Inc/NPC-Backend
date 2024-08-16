@@ -5,6 +5,9 @@ const {
 const {
   getVerificationInteractions,
 } = require("../smart_contracts/interactions/verification");
+const {
+  getNeptuneChainCreditsInteractions,
+} = require("../smart_contracts/interactions/npcCredits");
 // const {
 //   getMarketplaceInteractions,
 // } = require("../smart_contracts/interactions/marketplace");
@@ -13,6 +16,7 @@ const { UserDB } = require("./database");
 const signer = getSigner();
 const accountManagerInteractions = getAccountManagerInteractions(signer);
 const verificationInteractions = getVerificationInteractions(signer);
+const neptuneChainCreditsInteractions = getNeptuneChainCreditsInteractions(signer);
 // const marketplaceInteractions = getMarketplaceInteractions(signer);
 
 /**************************Account Management Handles********************************
@@ -198,4 +202,161 @@ const Verification = {
   resolveAsset: handleResolveAsset,
 };
 
-module.exports = { Account, Verification };
+/**************************NeptuneChainCredits Handles********************************/
+
+const handleIssueCredits = async (
+  senderID,
+  nftTokenId,
+  producer,
+  verifier,
+  creditType,
+  amount
+) => {
+  try {
+    const receipt =
+      await neptuneChainCreditsInteractions.Functions.issueCredits(
+        senderID,
+        nftTokenId,
+        producer,
+        verifier,
+        creditType,
+        amount
+      );
+    if (UserDB.get.credits.add.issued(senderID, nftTokenId, receipt?.hash)) {
+      return { receipt };
+    }
+    throw new Error("DB Not Updated!");
+  } catch (error) {
+    throw error;
+  }
+};
+
+const handleBuyCredits = async (
+  accountID,
+  producer,
+  verifier,
+  creditType,
+  amount,
+  price
+) => {
+  try {
+    const receipt = await neptuneChainCreditsInteractions.Functions.buyCredits(
+      accountID,
+      producer,
+      verifier,
+      creditType,
+      amount,
+      price
+    );
+    if (UserDB.get.credits.add.purchased(accountID, receipt?.hash)) {
+      return { receipt };
+    }
+    throw new Error("DB Not Updated!");
+  } catch (error) {
+    throw error;
+  }
+};
+
+const handleTransferCredits = async (
+  senderID,
+  recipientID,
+  producer,
+  verifier,
+  creditType,
+  amount,
+  price
+) => {
+  try {
+    const receipt =
+      await neptuneChainCreditsInteractions.Functions.transferCredits(
+        senderID,
+        recipientID,
+        producer,
+        verifier,
+        creditType,
+        amount,
+        price
+      );
+    if (
+      UserDB.get.credits.add.transferred(senderID, recipientID, receipt?.hash)
+    ) {
+      return { receipt };
+    }
+    throw new Error("DB Not Updated!");
+  } catch (error) {
+    throw error;
+  }
+};
+
+const handleDonateCredits = async (
+  senderID,
+  producer,
+  verifier,
+  creditType,
+  amount
+) => {
+  try {
+    const receipt =
+      await neptuneChainCreditsInteractions.Functions.donateCredits(
+        senderID,
+        producer,
+        verifier,
+        creditType,
+        amount
+      );
+    if (UserDB.get.credits.add.donated(senderID, receipt?.hash)) {
+      return { receipt };
+    }
+    throw new Error("DB Not Updated!");
+  } catch (error) {
+    throw error;
+  }
+};
+
+const handleOwnerOf = async (tokenId) => {
+  try {
+    const result = await neptuneChainCreditsInteractions.Functions.ownerOf(
+      tokenId
+    );
+    return { result };
+  } catch (error) {
+    throw error;
+  }
+};
+
+const handleGetCreditTypes = async (tokenId) => {
+  try {
+    const result =
+      await neptuneChainCreditsInteractions.Functions.getCreditTypes(tokenId);
+    return { result };
+  } catch (error) {
+    throw error;
+  }
+};
+
+const handleGetCreditSupplyLimit = async (tokenId, creditType) => {
+  try {
+    const result =
+      await neptuneChainCreditsInteractions.Functions.getCreditSupplyLimit(
+        tokenId,
+        creditType
+      );
+    return { result };
+  } catch (error) {
+    throw error;
+  }
+};
+
+const npcCredits = {
+  issueCredits: handleIssueCredits,
+  buyCredits: handleBuyCredits,
+  transferCredits: handleTransferCredits,
+  donateCredits: handleDonateCredits,
+  get: {
+    creditTypes: handleGetCreditTypes,
+    creditSupplyLimit: handleGetCreditSupplyLimit,
+  },
+  ownerOf: handleOwnerOf,
+};
+
+module.exports = { Account, Verification, npcCredits };
