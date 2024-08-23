@@ -213,8 +213,8 @@ const handleIssueCredits = async (
   amount
 ) => {
   try {
-    const receipt =
-      await neptuneChainCreditsInteractions.Functions.issueCredits(
+    const _lastCertId = await neptuneChainCreditsInteractions.Functions.getTotalCertificates();
+      const receipt = await neptuneChainCreditsInteractions.Functions.issueCredits(
         senderID,
         nftTokenId,
         producer,
@@ -223,7 +223,7 @@ const handleIssueCredits = async (
         amount
       );
     if (UserDB.get.credits.add.issued(senderID, nftTokenId, receipt?.hash)) {
-      return { receipt };
+      return { receipt, certID: ++Number(_lastCertId) };
     }
     throw new Error("DB Not Updated!");
   } catch (error) {
@@ -240,6 +240,8 @@ const handleBuyCredits = async (
   price
 ) => {
   try {
+    //get last certificateID
+    const _lastCertId = await sContract.getTotalCertificates();
     const receipt = await neptuneChainCreditsInteractions.Functions.buyCredits(
       accountID,
       producer,
@@ -347,14 +349,36 @@ const handleGetCreditSupplyLimit = async (tokenId, creditType) => {
   }
 };
 
+const npcCreditFunctions = neptuneChainCreditsInteractions.Functions;
+
 const npcCredits = {
   issueCredits: handleIssueCredits,
   buyCredits: handleBuyCredits,
   transferCredits: handleTransferCredits,
   donateCredits: handleDonateCredits,
   get: {
-    creditTypes: handleGetCreditTypes,
+    accounts: {
+      getProducers: npcCreditFunctions.getProducers,
+    getProducerVerifiers: npcCreditFunctions.getProducerVerifiers,
+    getAccountCreditBalance: npcCreditFunctions.getAccountCreditBalance,
+    },
+    supplies: {
+      creditTypes: handleGetCreditTypes,
     creditSupplyLimit: handleGetCreditSupplyLimit,
+    getSupply: npcCreditFunctions.getSupply,
+    totalSold: npcCreditFunctions.getTotalSold,
+    },
+    certificates: {
+      certificate: npcCreditFunctions.getCertificateById,
+    totalCertificates: npcCreditFunctions.getTotalCertificates,
+    userCertificats: npcCreditFunctions.getAccountCertificates
+    }
+  },
+  checks: {
+    isProducerRegistered: npcCreditFunctions.isProducerRegistered,
+    isVerifierRegistered: npcCreditFunctions.isVerifierRegistered,
+    getRecoveryDuration: npcCreditFunctions.getRecoveryDuration
+
   },
   ownerOf: handleOwnerOf,
 };

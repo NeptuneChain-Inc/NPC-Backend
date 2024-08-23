@@ -1,5 +1,5 @@
 const NeptuneChainCreditsContract = {
-  Address: '0xb0503d32A0649F046a2537b2Ea1c710C30d1DEb6',
+  Address: '0xb0Fa031F4da17bfC1E1CBC736f3942d17b820f23',
   ABI: [
       // ERC20 Standard Functions
       "function balanceOf(address account) view returns (uint256)",
@@ -13,13 +13,27 @@ const NeptuneChainCreditsContract = {
       "event Approval(address indexed owner, address indexed spender, uint256 value)",
 
       // Custom Functions
-      "function issueCredits(string memory senderID, uint256 nftTokenId, string memory producer, string memory verifier, string memory creditType, uint256 amount) external returns (bool)",
-      "function buyCredits(string memory accountID, string memory producer, string memory verifier, string memory creditType, uint256 amount, uint256 price) external",
-      "function transferCredits(string memory senderID, string memory recipientID, string memory producer, string memory verifier, string memory creditType, uint256 amount, uint256 price) external",
-      "function donateCredits(string memory senderID, string memory producer, string memory verifier, string memory creditType, uint256 amount) external",
+      "function issueCredits(string senderID, uint256 nftTokenId, string producer, string verifier, string creditType, uint256 amount) external returns (bool)",
+      "function buyCredits(string accountID, string producer, string verifier, string creditType, uint256 amount, uint256 price) external",
+      "function transferCredits(string senderID, string recipientID, string producer, string verifier, string creditType, uint256 amount, uint256 price) external",
+      "function donateCredits(string senderID, string producer, string verifier, string creditType, uint256 amount) external",
       "function ownerOf(uint256 tokenId) external view returns (address)",
       "function getCreditTypes(uint256 tokenId) external view returns (string[] memory)",
-      "function getCreditSupplyLimit(uint256 tokenId, string calldata creditType) external view returns (uint256)",
+      "function getCreditSupplyLimit(uint256 tokenId, string creditType) external view returns (uint256)",
+      
+      // Getter Functions
+      "function getTotalCertificates() external view returns (int256)",
+      "function getTotalSold() external view returns (int256)",
+      "function isProducerRegistered(string producer) external view returns (bool)",
+      "function isVerifierRegistered(string producer, string verifier) external view returns (bool)",
+      "function getProducerVerifiers(string producer) external view returns (string[] memory)",
+      "function getSupply(string producer, string verifier, string creditType) external view returns (uint256 issued, uint256 available, uint256 donated)",
+      "function getCertificateById(int256 certificateId) external view returns (int256 id, string memory recipient, string memory producer, string memory verifier, string memory creditType, int256 balance, int256 price, uint256 timestamp)",
+      "function getAccountCertificates(string accountID) external view returns (int256[] memory)",
+      "function getAccountCreditBalance(string accountID, string producer, string verifier, string creditType) external view returns (uint256)",
+      "function getCreditTypes() external view returns (string[] memory)",
+      "function getProducers() external view returns (string[] memory)",
+      "function getRecoveryDuration() external view returns (uint256)",
 
       // Custom Events
       "event CreditsIssued(string indexed producer, string verifier, string creditType, uint256 amount)",

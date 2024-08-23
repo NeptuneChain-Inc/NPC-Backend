@@ -28,8 +28,8 @@ router.post("/credits/issue", async (req, res) => {
 router.post("/credits/buy", async (req, res) => {
   const { accountID, producer, verifier, creditType, amount, price } = req.body;
   try {
-    const receipt = await npcCredits.buyCredits(accountID, producer, verifier, creditType, amount, price);
-    return res.send({ receipt });
+    const { receipt, certID } = await npcCredits.buyCredits(accountID, producer, verifier, creditType, amount, price) || {};
+    return res.send({ receipt, certID });
   } catch (error) {
     return res.status(500).send({ error: error.message });
   }
@@ -92,7 +92,7 @@ router.get("/nft/owner/:tokenId", async (req, res) => {
 router.get("/nft/credit-types/:tokenId", async (req, res) => {
   const { tokenId } = req.params;
   try {
-    const result = await npcCredits.get.creditTypes(tokenId);
+    const result = await npcCredits.get.supplies.creditTypes(tokenId);
     return res.send({ result });
   } catch (error) {
     return res.status(500).send({ error: error.message });
@@ -108,7 +108,180 @@ router.get("/nft/credit-types/:tokenId", async (req, res) => {
 router.get("/nft/credit-supply-limit/:tokenId/:creditType", async (req, res) => {
   const { tokenId, creditType } = req.params;
   try {
-    const result = await npcCredits.get.creditSupplyLimit(tokenId, creditType);
+    const result = await npcCredits.get.supplies.creditSupplyLimit(tokenId, creditType);
+    return res.send({ result });
+  } catch (error) {
+    return res.status(500).send({ error: error.message });
+  }
+});
+
+/**
+ * @api {get} /credits/total-certificates
+ * @apiName GetTotalCertificates
+ * @apiDescription Get the total number of certificates issued
+ * @apiGroup Credits
+ */
+router.get("/credits/total-certificates", async (req, res) => {
+  try {
+    const result = await npcCredits.get.certificates.totalCertificates();
+    return res.send({ result });
+  } catch (error) {
+    return res.status(500).send({ error: error.message });
+  }
+});
+
+/**
+ * @api {get} /credits/total-sold
+ * @apiName GetTotalSold
+ * @apiDescription Get the total number of credits sold
+ * @apiGroup Credits
+ */
+router.get("/credits/total-sold", async (req, res) => {
+  try {
+    const result = await npcCredits.get.supplies.totalSold();
+    return res.send({ result });
+  } catch (error) {
+    return res.status(500).send({ error: error.message });
+  }
+});
+
+/**
+ * @api {get} /credits/producer-registered/:producer
+ * @apiName IsProducerRegistered
+ * @apiDescription Check if a producer is registered
+ * @apiGroup Credits
+ */
+router.get("/credits/producer-registered/:producer", async (req, res) => {
+  const { producer } = req.params;
+  try {
+    const result = await npcCredits.checks.isProducerRegistered(producer);
+    return res.send({ result });
+  } catch (error) {
+    return res.status(500).send({ error: error.message });
+  }
+});
+
+/**
+ * @api {get} /credits/verifier-registered/:producer/:verifier
+ * @apiName IsVerifierRegistered
+ * @apiDescription Check if a verifier is registered for a producer
+ * @apiGroup Credits
+ */
+router.get("/credits/verifier-registered/:producer/:verifier", async (req, res) => {
+  const { producer, verifier } = req.params;
+  try {
+    const result = await npcCredits.checks.isVerifierRegistered(producer, verifier);
+    return res.send({ result });
+  } catch (error) {
+    return res.status(500).send({ error: error.message });
+  }
+});
+
+/**
+ * @api {get} /credits/verifiers/:producer
+ * @apiName GetProducerVerifiers
+ * @apiDescription Get the list of verifiers for a producer
+ * @apiGroup Credits
+ */
+router.get("/credits/verifiers/:producer", async (req, res) => {
+  const { producer } = req.params;
+  try {
+    const result = await npcCredits.get.accounts.getProducerVerifiers(producer);
+    return res.send({ result });
+  } catch (error) {
+    return res.status(500).send({ error: error.message });
+  }
+});
+
+/**
+ * @api {get} /credits/supply/:producer/:verifier/:creditType
+ * @apiName GetSupply
+ * @apiDescription Get supply details for a specific producer, verifier, and credit type
+ * @apiGroup Credits
+ */
+router.get("/credits/supply/:producer/:verifier/:creditType", async (req, res) => {
+  const { producer, verifier, creditType } = req.params;
+  try {
+    const result = await npcCredits.get.supplies.getSupply(producer, verifier, creditType);
+    return res.send({ result });
+  } catch (error) {
+    return res.status(500).send({ error: error.message });
+  }
+});
+
+/**
+ * @api {get} /certificates/:certificateId
+ * @apiName GetCertificateById
+ * @apiDescription Get certificate details by ID
+ * @apiGroup Certificates
+ */
+router.get("/certificates/:certificateId", async (req, res) => {
+  const { certificateId } = req.params;
+  try {
+    const certificate = await npcCredits.get.certificates.certificate(certificateId);
+    console.log("SEND", certificate)
+    return res.send({ certificate });
+  } catch (error) {
+    return res.status(500).send({ error: error.message });
+  }
+});
+
+/**
+ * @api {get} /credits/account-certificates/:accountID
+ * @apiName GetAccountCertificates
+ * @apiDescription Get all certificate IDs associated with an account
+ * @apiGroup Credits
+ */
+router.get("/credits/account-certificates/:accountID", async (req, res) => {
+  const { accountID } = req.params;
+  try {
+    const result = await npcCredits.get.certificates.userCertificats(accountID);
+    return res.send({ result });
+  } catch (error) {
+    return res.status(500).send({ error: error.message });
+  }
+});
+
+/**
+ * @api {get} /credits/account-balance/:accountID/:producer/:verifier/:creditType
+ * @apiName GetAccountCreditBalance
+ * @apiDescription Get the credit balance for a specific account, producer, verifier, and credit type
+ * @apiGroup Credits
+ */
+router.get("/credits/account-balance/:accountID/:producer/:verifier/:creditType", async (req, res) => {
+  const { accountID, producer, verifier, creditType } = req.params;
+  try {
+    const result = await npcCredits.get.accounts.getAccountCreditBalance(accountID, producer, verifier, creditType);
+    return res.send({ result });
+  } catch (error) {
+    return res.status(500).send({ error: error.message });
+  }
+});
+
+/**
+ * @api {get} /credits/all-producers
+ * @apiName GetAllProducers
+ * @apiDescription Get all registered producers
+ * @apiGroup Credits
+ */
+router.get("/credits/all-producers", async (req, res) => {
+  try {
+    const result = await npcCredits.get.accounts.getProducers();
+    return res.send({ result });
+  } catch (error) {
+    return res.status(500).send({ error: error.message });
+  }
+});
+
+/**
+ * @api {get} /credits/recovery-duration
+ * @apiName GetRecoveryDuration
+ * @apiDescription Get the current recovery duration
+ * @apiGroup Credits
+ */
+router.get("/credits/recovery-duration", async (req, res) => {
+  try {
+    const result = await npcCredits.checks.getRecoveryDuration();
     return res.send({ result });
   } catch (error) {
     return res.status(500).send({ error: error.message });
