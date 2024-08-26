@@ -28,8 +28,14 @@ router.post("/credits/issue", async (req, res) => {
 router.post("/credits/buy", async (req, res) => {
   const { accountID, producer, verifier, creditType, amount, price } = req.body;
   try {
-    const { receipt, certID } = await npcCredits.buyCredits(accountID, producer, verifier, creditType, amount, price) || {};
-    return res.send({ receipt, certID });
+    const response = await npcCredits.buyCredits(accountID, producer, verifier, creditType, amount, price);
+    const { error, receipt, certID } = response || {};
+    console.log("BuyCredits Response", {response});
+    if(receipt && certID){
+      return res.send({ response });
+    } else {
+      return res.status(510).send({ error: error ? error.message : "ERROR!" });
+    }
   } catch (error) {
     return res.status(500).send({ error: error.message });
   }

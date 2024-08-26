@@ -19,12 +19,12 @@ const _getData = async (path) => (await get(ref(db, path)))?.val();
 
 const _saveData = async (path, data) => {
   await set(ref(db, path), data);
-  return Promise.resolve(true);
+  return true;
 };
 
 const _pushData = async (path, data) => {
   await push(ref(db, path), data);
-  return Promise.resolve(true);
+  return true;
 };
 /**
  * Loads the default template for a user's dashboard data.
@@ -276,6 +276,17 @@ const saveMedia = async (newMediaPaylaod, creatorUID) => {
   }
 };
 
+const logPurchase = async (uid, txHash, certID) => {
+  try {
+    return await _pushData(
+      `neptunechain/users/data/${uid}/credits/purchases`,
+      { txHash, certID }
+    );
+  } catch (error) {
+    throw error;
+  }
+};
+
 const AddUserSubmission = async (uid, assetID, txHash) => {
   try {
     return await _pushData(
@@ -373,6 +384,9 @@ const UserDB = {
         approvals: getUserApprovals,
       },
     },
+    credits: {
+      add: logPurchase
+    }
   },
   create: {
     user: createUser,

@@ -241,7 +241,7 @@ const handleBuyCredits = async (
 ) => {
   try {
     //get last certificateID
-    const _lastCertId = await sContract.getTotalCertificates();
+    const _lastCertId = await neptuneChainCreditsInteractions.Functions.getTotalCertificates();
     const receipt = await neptuneChainCreditsInteractions.Functions.buyCredits(
       accountID,
       producer,
@@ -250,12 +250,13 @@ const handleBuyCredits = async (
       amount,
       price
     );
-    if (UserDB.get.credits.add.purchased(accountID, receipt?.hash)) {
-      return { receipt };
+    const certID = Number(_lastCertId)+1;
+    if (UserDB.get.credits.add(accountID, receipt?.hash, certID)) {
+      return { receipt, certID };
     }
-    throw new Error("DB Not Updated!");
+    return { error: { message: "DB Not Updated!"}};
   } catch (error) {
-    throw error;
+    return { error };
   }
 };
 
