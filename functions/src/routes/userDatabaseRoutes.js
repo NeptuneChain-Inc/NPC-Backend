@@ -4,39 +4,6 @@ const router = express.Router();
 
 const database = require("../apis/database");
 
-/**
- * @api {post} /db/user/create
- * @apiName CreateUserDatabase
- * @apiDescription Initiate database for new user
- * @apiGroup UserDatabase
- *
- * @apiParam {String} userUID - User's unique identifier from firebase authentication.
- * @apiParam {String} email - User's email address from account registration form input.
- * @apiParam {String} username - User's account name from registration form input.
- * @apiParam {String} role - User's account role chosen from registration form.
- * @apiparam {number} PIN 6-figure access pin for wallet access
- *
- * @apiSuccess {Object} result - Returns true if user account created
- *
- * @apiError {Object} error Error message.
- */
-router.post("/create", async (req, res) => {
-  const { userUID, email, username, role, PIN } = req.body;
-  try {
-    const { create } = database.UserDB;
-    const result = await create.user({
-      userUID,
-      email,
-      username,
-      role,
-      PIN,
-    });
-    return res.send({ result });
-  } catch (error) {
-    return res.status(500).send({ error });
-  }
-});
-
 /************************************************************************************************************************************************************************* */
 
 /**
@@ -51,7 +18,7 @@ router.post("/create", async (req, res) => {
  *
  * @apiError {Object} error Error message.
  */
-router.post("/get/fuid", async (req, res) => {
+router.post("/get/from/uid", async (req, res) => {
   const { userUID } = req.body;
   try {
     const { user } = database.UserDB.get;
@@ -63,7 +30,7 @@ router.post("/get/fuid", async (req, res) => {
 });
 
 /**
- * @api {post} /db/user/get/fusername
+ * @api {post} /db/user/get/from-username
  * @apiName GetUserDatabaseFromName
  * @apiDescription Gets user data using (from) account username. It first resolves userUID before retrieving user.
  * @apiGroup UserDatabase
@@ -74,7 +41,7 @@ router.post("/get/fuid", async (req, res) => {
  *
  * @apiError {Object} error Error message.
  */
-router.post("/get/fusername", async (req, res) => {
+router.post("/get/from/username", async (req, res) => {
   const { username } = req.body;
   try {
     const { get } = database.UserDB;
@@ -97,7 +64,7 @@ router.post("/get/fusername", async (req, res) => {
  *
  * @apiError {Object} error Error message.
  */
-router.post("/get/username", async (req, res) => {
+router.post("/get/uid/from/username", async (req, res) => {
   const { username } = req.body;
   try {
     const { get } = database.UserDB;

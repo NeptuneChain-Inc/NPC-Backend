@@ -7,9 +7,42 @@ const { EmailUser } = require("../apis/authentication");
 const { Account } = require("../apis/neptunechain");
 
 /**
+ * @api {post} /account/create
+ * @apiName CreateAccount
+ * @apiDescription Initiate database for new user
+ * @apiGroup Account
+ *
+ * @apiParam {String} userUID - User's unique identifier from firebase authentication.
+ * @apiParam {String} email - User's email address from account registration form input.
+ * @apiParam {String} username - User's account name from registration form input.
+ * @apiParam {String} role - User's account role chosen from registration form.
+ * @apiparam {number} PIN 6-figure access pin for wallet access
+ *
+ * @apiSuccess {Object} result - Returns true if user account created
+ *
+ * @apiError {Object} error Error message.
+ */
+router.post("/create", async (req, res) => {
+  const { userUID, email, username, role, PIN } = req.body;
+  try {
+    const { create } = database.UserDB;
+    const result = await create.user({
+      userUID,
+      email,
+      username,
+      role,
+      PIN,
+    });
+    return res.send({ result });
+  } catch (error) {
+    return res.status(500).send({ error });
+  }
+});
+
+/**
  * @api {post} /account/register
  * @apiName RegisterAccount
- * @apiDescription Register a new account with a specific role
+ * @apiDescription Register a new account with a specific role on blockchain
  * @apiGroup Account
  *
  * @apiParam {String} accountID - The ID of the account to register.
@@ -109,7 +142,7 @@ router.post("/isNotBlacklisted", async (req, res) => {
 });
 
 /**
- * @api {post} /account/getAccountData
+ * @api {post} /account/data
  * @apiName GetAccountData
  * @apiDescription Get account data by account ID
  * @apiGroup Account
@@ -120,7 +153,7 @@ router.post("/isNotBlacklisted", async (req, res) => {
  *
  * @apiError {Object} error Error message.
  */
-router.post("/getAccountData", async (req, res) => {
+router.post("/data", async (req, res) => {
   const { accountID } = req.body;
   try {
     const result = await Account.getAccountData(accountID);

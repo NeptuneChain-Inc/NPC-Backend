@@ -52,11 +52,11 @@ app.use("/account", accountRoutes);
 const userDatabaseRoutes = require("./routes/userDatabaseRoutes");
 app.use("/db/user", userDatabaseRoutes);
 
-const assetDatabaseRoutes = require("./routes/assetDatabaseRoutes");
-app.use("/db/asset", assetDatabaseRoutes);
-
 const mediaDatabaseRoutes = require("./routes/mediaDatabaseRoutes");
 app.use("/db/media", mediaDatabaseRoutes);
+
+const assetDatabaseRoutes = require("./routes/assetDatabaseRoutes");
+app.use("/db/asset", assetDatabaseRoutes);
 
 const livepeerRoutes = require("./routes/livepeerRoutes");
 app.use("/livepeer", livepeerRoutes);
@@ -64,8 +64,8 @@ app.use("/livepeer", livepeerRoutes);
 const mapsRoutes = require("./routes/mapsRoutes");
 app.use("/maps", mapsRoutes);
 
-const moralisRoutes = require("./routes/moralisRoutes");
-app.use("/moralis", moralisRoutes);
+const alchemyRoutes = require("./routes/alchemyRoutes");
+app.use("/alchemy", alchemyRoutes);
 
 const neptuneChainCreditsRoutes = require("./routes/npcCreditsRoutes");
 app.use("/npc_credits", neptuneChainCreditsRoutes);
