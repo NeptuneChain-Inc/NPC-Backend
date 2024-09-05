@@ -18,4 +18,13 @@ const getMapsAPI = async () => {
   }
 };
 
-module.exports = { getMapsAPI };
+const getMapsKey = async () => {
+  try {
+    return process?.env?.MAPS_API_KEY;
+  } catch (error) {
+    console.error(error);
+    return null;
+  }
+};
+
+module.exports = { getMapsAPI, getMapsKey };

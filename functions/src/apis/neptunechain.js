@@ -8,6 +8,7 @@ const {
 const {
   getNeptuneChainCreditsInteractions,
 } = require("../smart_contracts/interactions/npcCredits");
+const { startListeners, stopListeners } = require("../smart_contracts/listeners/npcc_interactions");
 // const {
 //   getMarketplaceInteractions,
 // } = require("../smart_contracts/interactions/marketplace");
@@ -352,6 +353,10 @@ const handleGetCreditSupplyLimit = async (tokenId, creditType) => {
 
 const npcCreditFunctions = neptuneChainCreditsInteractions.Functions;
 
+const listenCreditInteractions = async () =>  await startListeners(signer);
+const stopListenCreditInteractions = async () =>  await stopListeners();
+
+
 const npcCredits = {
   issueCredits: handleIssueCredits,
   buyCredits: handleBuyCredits,
@@ -373,7 +378,8 @@ const npcCredits = {
       certificate: npcCreditFunctions.getCertificateById,
     totalCertificates: npcCreditFunctions.getTotalCertificates,
     userCertificats: npcCreditFunctions.getAccountCertificates
-    }
+    },
+    events: npcCreditFunctions.getEvents
   },
   checks: {
     isProducerRegistered: npcCreditFunctions.isProducerRegistered,
@@ -381,7 +387,10 @@ const npcCredits = {
     getRecoveryDuration: npcCreditFunctions.getRecoveryDuration
 
   },
+  startListening: listenCreditInteractions,
+  stopListening: stopListenCreditInteractions,
   ownerOf: handleOwnerOf,
+
 };
 
 module.exports = { Account, Verification, npcCredits };

@@ -9,7 +9,7 @@ const router = express.Router();
  * @apiDescription Issue credits to a producer
  * @apiGroup Credits
  */
-router.post("/credits/issue", async (req, res) => {
+router.post("/issue", async (req, res) => {
   const { senderID, nftTokenId, producer, verifier, creditType, amount } = req.body;
   try {
     const receipt = await npcCredits.issueCredits(senderID, nftTokenId, producer, verifier, creditType, amount);
@@ -25,7 +25,7 @@ router.post("/credits/issue", async (req, res) => {
  * @apiDescription Buy credits from a producer
  * @apiGroup Credits
  */
-router.post("/credits/buy", async (req, res) => {
+router.post("/buy", async (req, res) => {
   const { accountID, producer, verifier, creditType, amount, price } = req.body;
   try {
     const response = await npcCredits.buyCredits(accountID, producer, verifier, creditType, amount, price);
@@ -47,7 +47,7 @@ router.post("/credits/buy", async (req, res) => {
  * @apiDescription Transfer credits to another account
  * @apiGroup Credits
  */
-router.post("/credits/transfer", async (req, res) => {
+router.post("/transfer", async (req, res) => {
   const { senderID, recipientID, producer, verifier, creditType, amount, price } = req.body;
   try {
     const receipt = await npcCredits.transferCredits(senderID, recipientID, producer, verifier, creditType, amount, price);
@@ -63,7 +63,7 @@ router.post("/credits/transfer", async (req, res) => {
  * @apiDescription Donate credits to a producer
  * @apiGroup Credits
  */
-router.post("/credits/donate", async (req, res) => {
+router.post("/donate", async (req, res) => {
   const { senderID, producer, verifier, creditType, amount } = req.body;
   try {
     const receipt = await npcCredits.donateCredits(senderID, producer, verifier, creditType, amount);
@@ -127,7 +127,7 @@ router.get("/nft/credit-supply-limit/:tokenId/:creditType", async (req, res) => 
  * @apiDescription Get the total number of certificates issued
  * @apiGroup Credits
  */
-router.get("/credits/total-certificates", async (req, res) => {
+router.get("/total-certificates", async (req, res) => {
   try {
     const result = await npcCredits.get.certificates.totalCertificates();
     return res.send({ result });
@@ -142,7 +142,7 @@ router.get("/credits/total-certificates", async (req, res) => {
  * @apiDescription Get the total number of credits sold
  * @apiGroup Credits
  */
-router.get("/credits/total-sold", async (req, res) => {
+router.get("/total-sold", async (req, res) => {
   try {
     const result = await npcCredits.get.supplies.totalSold();
     return res.send({ result });
@@ -157,7 +157,7 @@ router.get("/credits/total-sold", async (req, res) => {
  * @apiDescription Check if a producer is registered
  * @apiGroup Credits
  */
-router.get("/credits/producer-registered/:producer", async (req, res) => {
+router.get("/producer-registered/:producer", async (req, res) => {
   const { producer } = req.params;
   try {
     const result = await npcCredits.checks.isProducerRegistered(producer);
@@ -173,7 +173,7 @@ router.get("/credits/producer-registered/:producer", async (req, res) => {
  * @apiDescription Check if a verifier is registered for a producer
  * @apiGroup Credits
  */
-router.get("/credits/verifier-registered/:producer/:verifier", async (req, res) => {
+router.get("/verifier-registered/:producer/:verifier", async (req, res) => {
   const { producer, verifier } = req.params;
   try {
     const result = await npcCredits.checks.isVerifierRegistered(producer, verifier);
@@ -189,7 +189,7 @@ router.get("/credits/verifier-registered/:producer/:verifier", async (req, res) 
  * @apiDescription Get the list of verifiers for a producer
  * @apiGroup Credits
  */
-router.get("/credits/verifiers/:producer", async (req, res) => {
+router.get("/verifiers/:producer", async (req, res) => {
   const { producer } = req.params;
   try {
     const result = await npcCredits.get.accounts.getProducerVerifiers(producer);
@@ -205,7 +205,7 @@ router.get("/credits/verifiers/:producer", async (req, res) => {
  * @apiDescription Get supply details for a specific producer, verifier, and credit type
  * @apiGroup Credits
  */
-router.get("/credits/supply/:producer/:verifier/:creditType", async (req, res) => {
+router.get("/supply/:producer/:verifier/:creditType", async (req, res) => {
   const { producer, verifier, creditType } = req.params;
   try {
     const result = await npcCredits.get.supplies.getSupply(producer, verifier, creditType);
@@ -238,7 +238,7 @@ router.get("/certificates/:certificateId", async (req, res) => {
  * @apiDescription Get all certificate IDs associated with an account
  * @apiGroup Credits
  */
-router.get("/credits/account-certificates/:accountID", async (req, res) => {
+router.get("/account-certificates/:accountID", async (req, res) => {
   const { accountID } = req.params;
   try {
     const result = await npcCredits.get.certificates.userCertificats(accountID);
@@ -254,7 +254,7 @@ router.get("/credits/account-certificates/:accountID", async (req, res) => {
  * @apiDescription Get the credit balance for a specific account, producer, verifier, and credit type
  * @apiGroup Credits
  */
-router.get("/credits/account-balance/:accountID/:producer/:verifier/:creditType", async (req, res) => {
+router.get("/account-balance/:accountID/:producer/:verifier/:creditType", async (req, res) => {
   const { accountID, producer, verifier, creditType } = req.params;
   try {
     const result = await npcCredits.get.accounts.getAccountCreditBalance(accountID, producer, verifier, creditType);
@@ -270,7 +270,7 @@ router.get("/credits/account-balance/:accountID/:producer/:verifier/:creditType"
  * @apiDescription Get all registered producers
  * @apiGroup Credits
  */
-router.get("/credits/all-producers", async (req, res) => {
+router.get("/all-producers", async (req, res) => {
   try {
     const result = await npcCredits.get.accounts.getProducers();
     return res.send({ result });
@@ -285,11 +285,58 @@ router.get("/credits/all-producers", async (req, res) => {
  * @apiDescription Get the current recovery duration
  * @apiGroup Credits
  */
-router.get("/credits/recovery-duration", async (req, res) => {
+router.get("/recovery-duration", async (req, res) => {
   try {
     const result = await npcCredits.checks.getRecoveryDuration();
     return res.send({ result });
   } catch (error) {
+    return res.status(500).send({ error: error.message });
+  }
+});
+
+/**
+ * @api {get} /credits/recovery-duration
+ * @apiName StartEventListening
+ * @apiDescription Start listneing to credit contract events.
+ * @apiGroup Credits
+ */
+router.get("/start-listening", async (req, res) => {
+  try {
+    const result = await npcCredits.startListening();
+    return res.send({ result });
+  } catch (error) {
+    return res.status(500).send({ error: error.message });
+  }
+});
+
+/**
+ * @api {get} /credits/stop-listening
+ * @apiName StopEventListening
+ * @apiDescription Stop listening to credit contract events.
+ * @apiGroup Credits
+ */
+router.get("/stop-listening", async (req, res) => {
+  try {
+    const result = npcCredits.stopListening();
+    return res.send({ result });
+  } catch (error) {
+    console.error("Error stopping event listening:", error);
+    return res.status(500).send({ error: error.message });
+  }
+});
+
+/**
+ * @api {get} /credits/events
+ * @apiName GetCreditEvents
+ * @apiDescription Get events from credit contract.
+ * @apiGroup Credits
+ */
+router.get("/events", async (req, res) => {
+  try {
+    const events = await npcCredits.get.events();
+    return res.send({ events });
+  } catch (error) {
+    console.error("Error stopping event listening:", error);
     return res.status(500).send({ error: error.message });
   }
 });

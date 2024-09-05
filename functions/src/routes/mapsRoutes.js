@@ -23,4 +23,12 @@ router.post("/get/api", async (req, res) => {
   }
 });
 
+router.post("/get/key", async (req, res) => {
+  try {
+    const key = await maps.getMapsKey();
+    return res.send({ key });
+  } catch (error) {
+    return res.status(500).send({ error });
+  }
+});
 module.exports = router;

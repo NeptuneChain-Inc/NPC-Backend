@@ -5,6 +5,16 @@ const livepeer = require("../apis/livepeer");
 
 const router = express.Router();
 
+//SECURE
+router.post("/key", async (req, res) => {
+  try {
+    const key = await livepeer.getLivepeerKey();;
+    return res.send({ key });
+  } catch (error) {
+    return res.status(500).send({ error });
+  }
+});
+
 /**
  * @api {post} /livepeer_origin
  * @apiName LivepeerOrigin

@@ -2,6 +2,7 @@
 const { getAuth } = require("firebase/auth");
 const { initializeApp } = require("firebase/app");
 const { getDatabase } = require("firebase/database");
+const { getFirestore, collection, addDoc } = require("firebase/firestore");
 
 // const firebaseConfig = {
 //   apiKey: process.env.FB_API_KEY,
@@ -29,10 +30,13 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 
-// Initialize Firestore database
+// Initialize Realtime Database
 const db = getDatabase();
+
+// Initialize Firestore Database
+const fdb = getFirestore(app);
 
 // Initialize Firebase Auth
 const auth = getAuth(app);
 
-module.exports = { auth, db, firebaseConfig };
+module.exports = { auth, db, fdb, firebaseConfig };

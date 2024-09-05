@@ -1,6 +1,12 @@
 const { ethers } = require("ethers");
 const { NeptuneChainCreditsContract } = require("../abis/npc_credits");
 
+// Helper function to get the timestamp of a block
+const getEventTimestamp = async (blockNumber) => {
+  const block = await provider.getBlock(blockNumber);
+  return block.timestamp * 1000; // Convert to milliseconds
+};
+
 const getNeptuneChainCreditsInteractions = (signer) => {
   const contract = new ethers.Contract(
     NeptuneChainCreditsContract.Address,
@@ -326,41 +332,98 @@ const getNeptuneChainCreditsInteractions = (signer) => {
           throw error;
         }
       },
+      getEvents: async () => {
+        try {
+          // Query all event filters
+          const allTransactions = await Promise.all([
+            contract.queryFilter(contract.filters.CreditsIssued(), 0, "latest"),
+            contract.queryFilter(contract.filters.CreditsBought(), 0, "latest"),
+            contract.queryFilter(contract.filters.CreditsTransferred(), 0, "latest"),
+            contract.queryFilter(contract.filters.CreditsDonated(), 0, "latest"),
+            contract.queryFilter(contract.filters.CertificateCreated(), 0, "latest"),
+          ]);
+      
+          // Flatten the transactions array
+          const flattenedTransactions = allTransactions.flat();
+      
+          // Enrich transactions with timestamp
+          const enrichedEvents = await Promise.all(
+            flattenedTransactions.map(async (event) => {
+              const timestamp = await getEventTimestamp(event.blockNumber);
+              return {
+                txHash: event.transactionHash,
+                event: event.event,
+                args: event.args,
+                timestamp,
+              };
+            })
+          );
+      
+          return enrichedEvents;
+        } catch (error) {
+          console.error("Error fetching events:", error);
+          throw error
+        }
+      }
     },
     Listeners: {
-      // Listener for CreditsIssued event
-      onCreditsIssued: (callback) => {
-        contract.on(
-          "CreditsIssued",
-          (producer, verifier, creditType, amount, event) => {
-            callback({ producer, verifier, creditType, amount, event });
-          }
+      /**
+       * @notice Listener for CreditsIssued event with optional filters
+       * @param {Function} callback - Function to handle the event
+       * @param {Object} filters - Optional filters to apply to the event (producer, verifier, creditType)
+       */
+      onCreditsIssued: (callback, filters = {}) => {
+        const { producer, verifier, creditType } = filters;
+        
+        const eventFilter = contract.filters.CreditsIssued(
+          producer || null,  // Can be null if no filter
+          verifier || null,  // Can be null if no filter
+          creditType || null // Can be null if no filter
         );
+
+        contract.on(eventFilter, (producer, verifier, creditType, amount, event) => {
+          callback({ producer, verifier, creditType, amount, event });
+        });
       },
 
-      // Listener for CreditsBought event
-      onCreditsBought: (callback) => {
-        contract.on(
-          "CreditsBought",
-          (accountID, producer, verifier, creditType, amount, price, event) => {
-            callback({
-              accountID,
-              producer,
-              verifier,
-              creditType,
-              amount,
-              price,
-              event,
-            });
-          }
+      /**
+       * @notice Listener for CreditsBought event with optional filters
+       * @param {Function} callback - Function to handle the event
+       * @param {Object} filters - Optional filters to apply to the event (accountID, producer, verifier, creditType)
+       */
+      onCreditsBought: (callback, filters = {}) => {
+        const { accountID, producer, verifier, creditType } = filters;
+        
+        const eventFilter = contract.filters.CreditsBought(
+          accountID || null,
+          producer || null,
+          verifier || null,
+          creditType || null
         );
+
+        contract.on(eventFilter, (accountID, producer, verifier, creditType, amount, price, event) => {
+          callback({ accountID, producer, verifier, creditType, amount, price, event });
+        });
       },
 
-      // Listener for CreditsTransferred event
-      onCreditsTransferred: (callback) => {
-        contract.on(
-          "CreditsTransferred",
-          (
+      /**
+       * @notice Listener for CreditsTransferred event with optional filters
+       * @param {Function} callback - Function to handle the event
+       * @param {Object} filters - Optional filters to apply to the event (senderAccountID, receiverAccountID, producer, verifier, creditType)
+       */
+      onCreditsTransferred: (callback, filters = {}) => {
+        const { senderAccountID, receiverAccountID, producer, verifier, creditType } = filters;
+        
+        const eventFilter = contract.filters.CreditsTransferred(
+          senderAccountID || null,
+          receiverAccountID || null,
+          producer || null,
+          verifier || null,
+          creditType || null
+        );
+
+        contract.on(eventFilter, (senderAccountID, receiverAccountID, producer, verifier, creditType, amount, price, event) => {
+          callback({
             senderAccountID,
             receiverAccountID,
             producer,
@@ -368,66 +431,70 @@ const getNeptuneChainCreditsInteractions = (signer) => {
             creditType,
             amount,
             price,
-            event
-          ) => {
-            callback({
-              senderAccountID,
-              receiverAccountID,
-              producer,
-              verifier,
-              creditType,
-              amount,
-              price,
-              event,
-            });
-          }
-        );
+            event,
+          });
+        });
       },
 
-      // Listener for CreditsDonated event
-      onCreditsDonated: (callback) => {
-        contract.on(
-          "CreditsDonated",
-          (accountID, producer, verifier, creditType, amount, event) => {
-            callback({
-              accountID,
-              producer,
-              verifier,
-              creditType,
-              amount,
-              event,
-            });
-          }
+      /**
+       * @notice Listener for CreditsDonated event with optional filters
+       * @param {Function} callback - Function to handle the event
+       * @param {Object} filters - Optional filters to apply to the event (accountID, producer, verifier, creditType)
+       */
+      onCreditsDonated: (callback, filters = {}) => {
+        const { accountID, producer, verifier, creditType } = filters;
+        
+        const eventFilter = contract.filters.CreditsDonated(
+          accountID || null,
+          producer || null,
+          verifier || null,
+          creditType || null
         );
+
+        contract.on(eventFilter, (accountID, producer, verifier, creditType, amount, event) => {
+          callback({
+            accountID,
+            producer,
+            verifier,
+            creditType,
+            amount,
+            event,
+          });
+        });
       },
 
-      // Listener for CertificateCreated event
-      onCertificateCreated: (callback) => {
-        contract.on(
-          "CertificateCreated",
-          (
+      /**
+       * @notice Listener for CertificateCreated event with optional filters
+       * @param {Function} callback - Function to handle the event
+       * @param {Object} filters - Optional filters to apply to the event (certificateId, accountID, producer, verifier, creditType)
+       */
+      onCertificateCreated: (callback, filters = {}) => {
+        const { certificateId, accountID, producer, verifier, creditType } = filters;
+
+        const eventFilter = contract.filters.CertificateCreated(
+          certificateId || null,
+          accountID || null,
+          producer || null,
+          verifier || null,
+          creditType || null
+        );
+
+        contract.on(eventFilter, (certificateId, accountID, producer, verifier, creditType, balance, event) => {
+          callback({
             certificateId,
             accountID,
             producer,
             verifier,
             creditType,
             balance,
-            event
-          ) => {
-            callback({
-              certificateId,
-              accountID,
-              producer,
-              verifier,
-              creditType,
-              balance,
-              event,
-            });
-          }
-        );
+            event,
+          });
+        });
       },
 
-      // Remove all listeners (useful for cleanup)
+      /**
+       * @notice Removes all listeners for all events.
+       */
       removeAllListeners: () => {
         contract.removeAllListeners();
       },

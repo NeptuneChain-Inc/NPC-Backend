@@ -9,6 +9,15 @@ const handleError = (error) => {
   console.log("ERROR", error.message)
 }
 
+const getLivepeerKey = async () => {
+  try {
+    return process?.env?.LIVEPEER_API_KEY;
+  } catch (error) {
+    console.error(error);
+    return null;
+  }
+};
+
  const AssetOps = {
   create: async (newAssetPaylaod, userUID) => {
     var result = null;
@@ -71,6 +80,7 @@ const PlaybackOps = {
 }
 
 module.exports = {
+  getLivepeerKey,
   AssetOps,
   PlaybackOps
 };
