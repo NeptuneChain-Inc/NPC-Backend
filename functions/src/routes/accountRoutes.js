@@ -23,16 +23,10 @@ const { Account } = require("../apis/neptunechain");
  * @apiError {Object} error Error message.
  */
 router.post("/create", async (req, res) => {
-  const { userUID, email, username, role, PIN } = req.body;
+  //const { uid, email, username, role, PIN } = req.body;
   try {
     const { create } = database.UserDB;
-    const result = await create.user({
-      userUID,
-      email,
-      username,
-      role,
-      PIN,
-    });
+    const result = await create.user(req.body);
     return res.send({ result });
   } catch (error) {
     return res.status(500).send({ error });

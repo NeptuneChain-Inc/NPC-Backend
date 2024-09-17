@@ -54,10 +54,6 @@ const decryptKey = async (encryptedKey, derivedKey) => {
 
 /**
  * Generates an ethereum wallet address pair and binds Private Key with a user by encrypting the key with the userUID and 6-figure access pin and returning the encrypted key for storage.
- * @param {string} userUID Unique Identifier of user to bind wallet address
- * @param {number} PIN 6-figure access pin for wallet access
- *
- * @returns {string} encryptedKey
  */
 const generateWallet = async (userUID, PIN) => {
   const wallet = ethers.Wallet.createRandom();

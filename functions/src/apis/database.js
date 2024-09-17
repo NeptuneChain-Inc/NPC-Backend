@@ -150,16 +150,11 @@ const removeFromVerificationQueue = async (uid) => {
 
 /**
  * Creates a new user with the provided user data.
- *
- * @param {Object} userData - The user data object.
- * @param {string} userData.uid - The unique identifier for the user.
- * @param {string} userData.username - The username for the user.
- * @param {string} userData.role - The role of the user.
- * @param {number} userData.PIN 6-figure access pin for wallet access
- * @throws {Error} - Throws an error if any required fields are missing or if the user already exists.
- */
+ **/
 const createUser = async (userData) => {
   try {
+
+    console.log({userData});
     const { uid, username, role, PIN } = userData || {};
 
     if (!uid || !username || !role) {

@@ -13,7 +13,8 @@ const app = express();
 
 // Configure CORS
 const corsOptions = {
-  origin: ['https://nutrient.trading', 'https://neptunechain.io'],
+  //origin: ['https://nutrient.trading', 'https://neptunechain.io'],
+  origin: '*',
   methods: 'GET,POST,PUT,DELETE,OPTIONS',
   allowedHeaders: 'Content-Type,Authorization',
   credentials: true 
@@ -23,7 +24,8 @@ app.use(cors(corsOptions));
 
 // Ensure that preflight (OPTIONS) requests are handled with a 200 response
 app.options('*', (req, res) => {
-  res.setHeader('Access-Control-Allow-Origin', 'https://nutrient.trading');
+  //res.setHeader('Access-Control-Allow-Origin', 'https://nutrient.trading');
+  res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization');
   res.setHeader('Access-Control-Allow-Credentials', 'true');

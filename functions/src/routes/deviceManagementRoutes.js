@@ -13,7 +13,7 @@ const {
 } = require("../apis/deviceManager");
 
 /**
- * @api {get} /devices
+ * @api {post} /device/all
  * @apiName GetDevices
  * @apiDescription Get list of devices
  * @apiGroup DeviceManagement
@@ -22,17 +22,17 @@ const {
  *
  * @apiError {Object} error - Error message.
  */
-router.post("s", async (req, res) => {
+router.post("/all", async (req, res) => {
   try {
     const devices = await getDevices();
-    res.status(201).send({ devices });
+    res.status(200).send({ devices });
   } catch (error) {
     res.status(500).send({ error: error.message });
   }
 });
 
 /**
- * @api {post} /device
+ * @api {post} /device/add
  * @apiName AddDevice
  * @apiDescription Add a specific device
  * @apiGroup DeviceManagement
@@ -47,7 +47,7 @@ router.post("/add", async (req, res) => {
   const { devicePayload } = req.body;
   try {
     if (await addDevice(devicePayload)) {
-      res.status(201).send({ message: "Device added successfully" });
+      res.status(200).send({ message: "Device added successfully" });
     } else {
       res.status(501).send({ message: "Could not add device" });
     }
