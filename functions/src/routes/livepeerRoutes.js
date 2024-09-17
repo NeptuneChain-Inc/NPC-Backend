@@ -31,7 +31,7 @@ router.use(
     target: "https://origin.livepeer.com",
     changeOrigin: true,
     pathRewrite: {
-      "^/livepeer_origin": "",
+      "^/origin": "",
     },
   })
 );
@@ -50,8 +50,8 @@ router.use(
 router.post("/asset/create", async (req, res) => {
   const { newAssetPaylaod, userUID } = req.body;
   try {
-    const asset = await livepeer.AssetOps.create(newAssetPaylaod, userUID);
-    return res.send({ asset });
+    const result = await livepeer.AssetOps.create(newAssetPaylaod, userUID);
+    return res.send({ result });
   } catch (error) {
     return res.status(500).send({ error });
   }
