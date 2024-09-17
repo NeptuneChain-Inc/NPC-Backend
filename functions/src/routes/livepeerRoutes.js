@@ -37,6 +37,27 @@ router.use(
 );
 
 /**
+ * @api {post} /livepeer/asset/create
+ * @apiName CreateLivepeerAsset
+ * @apiDescription Create Livepeer Asset
+ * @apiGroup Livepeer
+ *
+ *
+ * @apiSuccess {Object} asset - Returns Livepeer asset 
+ *
+ * @apiError {Object} error - Error message.
+ */
+router.post("/asset/create", async (req, res) => {
+  const { newAssetPaylaod, userUID } = req.body;
+  try {
+    const asset = await livepeer.AssetOps.create(newAssetPaylaod, userUID);
+    return res.send({ asset });
+  } catch (error) {
+    return res.status(500).send({ error });
+  }
+});
+
+/**
  * @api {post} /livepeer/asset/get
  * @apiName GetLivepeerAsset
  * @apiDescription Get Livepeer Asset
