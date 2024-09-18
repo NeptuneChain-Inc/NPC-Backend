@@ -351,6 +351,64 @@ const setMediaMetadata = async (assetID, metadata) => {
   }
 };
 
+//MARKETPLACE DATABASE
+const addMarketplaceListing = async (tokenAddress, tokenId, listingId, price, seller) => {
+  try {
+    return await _pushData(`neptunechain/marketplace/listings`, {
+      tokenAddress,
+      tokenId,
+      listingId,
+      price,
+      seller,
+    });
+  } catch (error) {
+    throw error;
+  }
+};
+
+const updateMarketplaceSale = async (listingId, buyer, price) => {
+  try {
+    return await _saveData(`neptunechain/marketplace/sales/${listingId}`, {
+      buyer,
+      price,
+    });
+  } catch (error) {
+    throw error;
+  }
+};
+
+const logMarketplaceBid = async (listingId, bidder, amount) => {
+  try {
+    return await _pushData(`neptunechain/marketplace/bids/${listingId}`, {
+      bidder,
+      amount,
+    });
+  } catch (error) {
+    throw error;
+  }
+};
+
+const updateMarketplaceBidAccepted = async (listingId, bidder, amount) => {
+  try {
+    return await _saveData(`neptunechain/marketplace/accepted-bids/${listingId}`, {
+      bidder,
+      amount,
+    });
+  } catch (error) {
+    throw error;
+  }
+};
+
+const updateMarketplaceCancelListing = async (listingId) => {
+  try {
+    return await _saveData(`neptunechain/marketplace/cancelled-listings/${listingId}`, {
+      cancelled: true,
+    });
+  } catch (error) {
+    throw error;
+  }
+};
+
 const UserDB = {
   get: {
     user: getUser,
@@ -381,7 +439,18 @@ const UserDB = {
     },
     credits: {
       add: logPurchase
-    }
+    },
+    marketplace: {
+      add: {
+        listing: addMarketplaceListing,
+      },
+      update: {
+        sold: updateMarketplaceSale,
+        bidPlaced: logMarketplaceBid,
+        bidAccepted: updateMarketplaceBidAccepted,
+        cancel: updateMarketplaceCancelListing,
+      },
+    },
   },
   create: {
     user: createUser,

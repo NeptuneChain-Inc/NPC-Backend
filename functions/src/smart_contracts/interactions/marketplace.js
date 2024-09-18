@@ -1,7 +1,7 @@
-const {ethers} = require("ethers");
-const {MarketplaceContract} = require("../abis/marketplace_contract");
-const {ERC721} = require("../abis/standards");
-// const {NFT_API} = require("../../scripts/back_door");
+const { ethers } = require("ethers");
+const { MarketplaceContract } = require("../abis/marketplace_contract");
+const { ERC721 } = require("../abis/standards");
+const {getNFTMetadata} = require("../../apis/alchemy");
 
 const getMarketplaceInteractions = (signer) => {
   const contract = new ethers.Contract(
@@ -109,10 +109,9 @@ const getMarketplaceInteractions = (signer) => {
             (nft) => !unavailableListingIds.has(nft.listingId)
           );
           return Promise.all(
-            availableNFTs.map( async (nft) => {
-              // const metadata = await NFT_API.get.nft_metadata(nft.tokenAddress, nft.tokenId)
-              const metadata = {};
-              console.log("metadata", metadata)
+            availableNFTs.map(async (nft) => {
+              const metadata = await getNFTMetadata(nft.tokenAddress, nft.tokenId) || {};
+              console.log("metadata", metadata);
               const { name, symbol, tokenUri } = metadata || {};
               return {
                 ...nft,
@@ -154,8 +153,8 @@ const getMarketplaceInteractions = (signer) => {
             fromBlock || genBlock,
             toBlock
           );
-          const rewardsAccruedEvents = await contract.queryFilter(
-            contract.filters.RewardsAccrued(),
+          const bidWithdrawnEvents = await contract.queryFilter(
+            contract.filters.BidWithdrawn(),
             fromBlock || genBlock,
             toBlock
           );
@@ -199,8 +198,8 @@ const getMarketplaceInteractions = (signer) => {
               bidder: event.args.bidder,
               amount: ethers.formatEther(event.args.amount),
             })),
-            ...rewardsAccruedEvents.map((event) => ({
-              type: "Rewards Accrued",
+            ...bidWithdrawnEvents.map((event) => ({
+              type: "Bid Withdrwan",
               block: event.blockNumber,
               user: event.args.user,
               amount: ethers.formatEther(event.args.amount),
@@ -280,13 +279,13 @@ const getMarketplaceInteractions = (signer) => {
             amount: ethers.formatEther(event.args.amount),
           }));
         },
-        rewards: async (fromBlock = null, toBlock = "latest") => {
-          const rewardsAccruedEvents = await contract.queryFilter(
-            contract.filters.RewardsAccrued(),
+        BidWithdrawn: async (fromBlock = null, toBlock = "latest") => {
+          const bidWithdrawnEvents = await contract.queryFilter(
+            contract.filters.BidWithdrawn(),
             fromBlock || genBlock,
             toBlock
           );
-          return rewardsAccruedEvents.map((event) => ({
+          return bidWithdrawnEvents.map((event) => ({
             blockNumber: event.blockNumber,
             user: event.args.user,
             amount: ethers.formatEther(event.args.amount),
@@ -299,7 +298,7 @@ const getMarketplaceInteractions = (signer) => {
         contract.on(
           "Listed",
           (listingId, seller, tokenAddress, tokenId, price, event) => {
-            // When an NFT is listed, this fires up. 
+            // When an NFT is listed, this fires up.
             callback({
               listingId,
               seller,
@@ -345,9 +344,8 @@ const getMarketplaceInteractions = (signer) => {
           }
         );
       },
-      onRewardsAccrued: (callback) => {
-        contract.on("RewardsAccrued", (user, amount, event) => {
-          // Rewards Accrued: It's like getting a surprise gift, but in tokens!
+      onBidWithdrawn: (callback) => {
+        contract.on("BidWithdrawn", (user, amount, event) => {
           callback({ user, amount, event });
         });
       },
@@ -360,4 +358,4 @@ const getMarketplaceInteractions = (signer) => {
   };
 };
 
-module.exports = { getMarketplaceInteractions }
+module.exports = { getMarketplaceInteractions };

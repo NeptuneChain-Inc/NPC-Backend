@@ -78,6 +78,9 @@ app.use("/stripe", stripeRoutes);
 const deviceManagementRoutes = require("./routes/deviceManagementRoutes");
 app.use("/device", deviceManagementRoutes);
 
+const marketplaceRoutes = require("./routes/marketplaceRoutes");
+app.use("/marketplace", marketplaceRoutes);
+
 /****************************************************************************************** */
 exports.app = require("firebase-functions").https.onRequest(app);
 console.log(`SERVER IS LIVE!!`);

@@ -25,7 +25,7 @@ const validateDeviceId = async (deviceId) => {
   }
 
   try {
-    const snapshot = await get(ref(db, `devices/${deviceId}`));
+    const snapshot = await get(ref(db, `devices/${String(deviceId)}`));
     return snapshot.exists();
   } catch (error) {
     handleError(`Error validating device ID ${deviceId}:`, error);
@@ -206,7 +206,7 @@ async function emulateDeviceFunction(deviceId, interval, maxRunTime = 60000) {
     }
   } catch (error) {
     handleError(
-      `Error emulating device function for Device ${deviceId}:`,
+      `Error emulating device function for Device ${deviceId}: ${error.message}`,
       error
     );
   }
