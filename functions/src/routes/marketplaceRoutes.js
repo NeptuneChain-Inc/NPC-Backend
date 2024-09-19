@@ -135,7 +135,7 @@ router.post("/buyer/place_bid", async (req, res) => {
  *
  * @apiError {Object} error - Error message.
  */
-router.get("/get/listing_fee", async (req, res) => {
+router.post("/get/listing_fee", async (req, res) => {
   try {
     const fee = await Marketplace.Getters.getListingFee();
     return res.send({ fee });
@@ -180,7 +180,7 @@ router.post("/get/highest_bids", async (req, res) => {
  *
  * @apiError {Object} error - Error message.
  */
-router.get("/events/listings", async (req, res) => {
+router.post("/events/listings", async (req, res) => {
   try {
     const nfts = await Marketplace.Events.listAvailableNFTs();
     return res.send({ nfts });
@@ -199,7 +199,7 @@ router.get("/events/listings", async (req, res) => {
  *
  * @apiError {Object} error - Error message.
  */
-router.get("/events/all", async (req, res) => {
+router.post("/events/all", async (req, res) => {
   try {
     const events = await Marketplace.Events.getAllEvents();
     return res.send({ events });
@@ -218,7 +218,7 @@ router.get("/events/all", async (req, res) => {
  *
  * @apiError {Object} error - Error message.
  */
-router.get("/events/listed", async (req, res) => {
+router.post("/events/listed", async (req, res) => {
   try {
     const { fromBlock, toBlock } = req.body;
     const events = await Marketplace.Events.filtered.listed(fromBlock, toBlock);
@@ -238,7 +238,7 @@ router.get("/events/listed", async (req, res) => {
  *
  * @apiError {Object} error - Error message.
  */
-router.get("/events/sale", async (req, res) => {
+router.post("/events/sale", async (req, res) => {
   try {
     const { fromBlock, toBlock } = req.body;
     const events = await Marketplace.Events.filtered.sale(fromBlock, toBlock);
@@ -258,7 +258,7 @@ router.get("/events/sale", async (req, res) => {
  *
  * @apiError {Object} error - Error message.
  */
-router.get("/events/delisted", async (req, res) => {
+router.post("/events/delisted", async (req, res) => {
   try {
     const { fromBlock, toBlock } = req.body;
     const events = await Marketplace.Events.filtered.delisted(fromBlock, toBlock);
@@ -278,7 +278,7 @@ router.get("/events/delisted", async (req, res) => {
  *
  * @apiError {Object} error - Error message.
  */
-router.get("/events/bidded", async (req, res) => {
+router.post("/events/bidded", async (req, res) => {
   try {
     const { fromBlock, toBlock } = req.body;
     const events = await Marketplace.Events.filtered.bidded(fromBlock, toBlock);
@@ -297,8 +297,8 @@ router.get("/events/bidded", async (req, res) => {
  * @apiSuccess {Array} events - event objects.
  *
  * @apiError {Object} error - Error message.
- */bidAccepted
-router.get("/events/bidAccepted", async (req, res) => {
+ */
+router.post("/events/bidAccepted", async (req, res) => {
   try {
     const { fromBlock, toBlock } = req.body;
     const events = await Marketplace.Events.filtered.bidAccepted(fromBlock, toBlock);
@@ -318,7 +318,7 @@ router.get("/events/bidAccepted", async (req, res) => {
  *
  * @apiError {Object} error - Error message.
  */
-router.get("/events/bidWithdrwan", async (req, res) => {
+router.post("/events/bidWithdrwan", async (req, res) => {
   try {
     const { fromBlock, toBlock } = req.body;
     const events = await Marketplace.Events.filtered.bidWithdrawn(fromBlock, toBlock);
