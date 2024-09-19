@@ -87,13 +87,47 @@ const handleGetHighestBids = async (listingId) => {
   }
 };
 
-const handleListAvailableNFTs = async () => {
+/*************************************MArketplace Events with filtering ****************************************** */
+const listAvailableNFTs = async () => {
   try {
     return await marketplaceInteractions.Events.listAvailableNFTs();
   } catch (error) {
     throw error;
   }
+}
+
+const getAllEvents = async (fromBlock = null, toBlock = "latest") => {
+  try {
+    return await marketplaceInteractions.Events.getAllEvents(fromBlock, toBlock);
+  } catch (error) {
+    throw error;
+  }
+}
+
+/**********FILTERS*********** */
+const filterListedEvents = async (fromBlock = null, toBlock = "latest") => {
+  return await marketplaceInteractions.Events.filtered.listed(fromBlock, toBlock);
+}
+
+const filterSaleEvents = async (fromBlock = null, toBlock = "latest") => {
+  return await marketplaceInteractions.Events.filtered.sale(fromBlock, toBlock);
+}
+
+const filterDelistedEvents =  async (fromBlock = null, toBlock = "latest") => {
+  return await marketplaceInteractions.Events.filtered.delisted(fromBlock, toBlock);
+}
+
+const filterBiddedEvents = async (fromBlock = null, toBlock = "latest") => {
+  return await marketplaceInteractions.Events.filtered.bidded(fromBlock, toBlock);
+}
+
+const filterBidAccepted = async (fromBlock = null, toBlock = "latest") => {
+  return await marketplaceInteractions.Events.filtered.BidAccepted(fromBlock, toBlock);
 };
+
+const filterBidWithdrawnEvents = async (fromBlock = null, toBlock = "latest") => {
+  return await marketplaceInteractions.Events.filtered.BidWithdrawn(fromBlock, toBlock);
+}
 
 /********************************** Marketplace Event Listeners with Callbacks ***********************************/
 
@@ -163,11 +197,23 @@ const Marketplace = {
   Getters: {
     getListingFee: handleGetListingFee,
     getHighestBids: handleGetHighestBids,
-    listAvailableNFTs: handleListAvailableNFTs,
   },
   Events: {
+    listAvailableNFTs: listAvailableNFTs,
+    getAllEvents: getAllEvents,
+    filtered: {
+      listed: filterListedEvents,
+      sale: filterSaleEvents,
+      delisted: filterDelistedEvents,
+      bidded: filterBiddedEvents,
+      bidAccepted: filterBidAccepted,
+      bidWithdrawn: filterBidWithdrawnEvents
+    }
+  },
+  Listeners: {
     startListening: listenMarketplaceEvents,
     stopListening: stopMarketplaceListeners,
+    
   },
 };
 
